@@ -1,0 +1,483 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C00000000000000000000001 /* KareMichiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000001 /* KareMichiApp.swift */; };
+		C00000000000000000000002 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000002 /* GameView.swift */; };
+		C00000000000000000000003 /* Maze.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000003 /* Maze.swift */; };
+		C00000000000000000000004 /* MazeGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000004 /* MazeGame.swift */; };
+		C00000000000000000000005 /* MazeScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000005 /* MazeScene.swift */; };
+		C00000000000000000000006 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000006 /* Palette.swift */; };
+		C00000000000000000000007 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000007 /* ResultView.swift */; };
+		C00000000000000000000008 /* Tuning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000008 /* Tuning.swift */; };
+		C00000000000000000000009 /* MazeGameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* MazeGameTests.swift */; };
+		C00000000000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000010 /* Assets.xcassets */; };
+		C00000000000000000000011 /* DailyRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000011 /* DailyRun.swift */; };
+		C00000000000000000000012 /* Diagnosis.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000012 /* Diagnosis.swift */; };
+		C00000000000000000000013 /* SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000013 /* SeededGenerator.swift */; };
+		C00000000000000000000014 /* Traveler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000014 /* Traveler.swift */; };
+		C00000000000000000000015 /* GameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000015 /* GameAudio.swift */; };
+		C00000000000000000000016 /* HUDSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000016 /* HUDSnapshot.swift */; };
+		C00000000000000000000017 /* AdProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000017 /* AdProvider.swift */; };
+		C00000000000000000000018 /* RandomEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000018 /* RandomEvents.swift */; };
+		C00000000000000000000019 /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000019 /* CollectionView.swift */; };
+		C0000000000000000000001A /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001A /* ShareCardView.swift */; };
+		C0000000000000000000001B /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* StoreManager.swift */; };
+		C00000000000000000000020 /* ambient_wind_loop20s.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000020 /* ambient_wind_loop20s.wav */; };
+		C00000000000000000000021 /* bgm_musicbox_v4.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000021 /* bgm_musicbox_v4.wav */; };
+		C00000000000000000000022 /* sfx_bump.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000022 /* sfx_bump.wav */; };
+		C00000000000000000000023 /* sfx_card_flip.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000023 /* sfx_card_flip.wav */; };
+		C00000000000000000000024 /* sfx_chest.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000024 /* sfx_chest.wav */; };
+		C00000000000000000000025 /* sfx_discovery.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000025 /* sfx_discovery.wav */; };
+		C00000000000000000000026 /* sfx_footstep_a.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000026 /* sfx_footstep_a.wav */; };
+		C00000000000000000000027 /* sfx_footstep_b.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000027 /* sfx_footstep_b.wav */; };
+		C00000000000000000000028 /* sfx_footstep_c.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000028 /* sfx_footstep_c.wav */; };
+		C00000000000000000000029 /* sfx_goal.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000029 /* sfx_goal.wav */; };
+		C0000000000000000000002A /* sfx_ui_tap.wav in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000002A /* sfx_ui_tap.wav */; };
+		C0000000000000000000002B /* sfx_warp.wav in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000002B /* sfx_warp.wav */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		J00000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E00000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F00000000000000000000001;
+			remoteInfo = KareMichi;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A00000000000000000000001 /* KareMichiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KareMichiApp.swift; sourceTree = "<group>"; };
+		A00000000000000000000002 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		A00000000000000000000003 /* Maze.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Maze.swift; sourceTree = "<group>"; };
+		A00000000000000000000004 /* MazeGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MazeGame.swift; sourceTree = "<group>"; };
+		A00000000000000000000005 /* MazeScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MazeScene.swift; sourceTree = "<group>"; };
+		A00000000000000000000006 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		A00000000000000000000007 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		A00000000000000000000008 /* Tuning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tuning.swift; sourceTree = "<group>"; };
+		A00000000000000000000009 /* MazeGameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MazeGameTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A00000000000000000000011 /* DailyRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyRun.swift; sourceTree = "<group>"; };
+		A00000000000000000000012 /* Diagnosis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnosis.swift; sourceTree = "<group>"; };
+		A00000000000000000000013 /* SeededGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeededGenerator.swift; sourceTree = "<group>"; };
+		A00000000000000000000014 /* Traveler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Traveler.swift; sourceTree = "<group>"; };
+		A00000000000000000000015 /* GameAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAudio.swift; sourceTree = "<group>"; };
+		A00000000000000000000016 /* HUDSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDSnapshot.swift; sourceTree = "<group>"; };
+		A00000000000000000000017 /* AdProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdProvider.swift; sourceTree = "<group>"; };
+		A00000000000000000000018 /* RandomEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomEvents.swift; sourceTree = "<group>"; };
+		A00000000000000000000019 /* CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionView.swift; sourceTree = "<group>"; };
+		A0000000000000000000001A /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
+		A0000000000000000000001B /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
+		A0000000000000000000001C /* SPEC_diagnosis_v2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SPEC_diagnosis_v2.md; sourceTree = "<group>"; };
+		A00000000000000000000020 /* ambient_wind_loop20s.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ambient_wind_loop20s.wav; sourceTree = "<group>"; };
+		A00000000000000000000021 /* bgm_musicbox_v4.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bgm_musicbox_v4.wav; sourceTree = "<group>"; };
+		A00000000000000000000022 /* sfx_bump.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_bump.wav; sourceTree = "<group>"; };
+		A00000000000000000000023 /* sfx_card_flip.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_card_flip.wav; sourceTree = "<group>"; };
+		A00000000000000000000024 /* sfx_chest.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_chest.wav; sourceTree = "<group>"; };
+		A00000000000000000000025 /* sfx_discovery.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_discovery.wav; sourceTree = "<group>"; };
+		A00000000000000000000026 /* sfx_footstep_a.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_footstep_a.wav; sourceTree = "<group>"; };
+		A00000000000000000000027 /* sfx_footstep_b.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_footstep_b.wav; sourceTree = "<group>"; };
+		A00000000000000000000028 /* sfx_footstep_c.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_footstep_c.wav; sourceTree = "<group>"; };
+		A00000000000000000000029 /* sfx_goal.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_goal.wav; sourceTree = "<group>"; };
+		A0000000000000000000002A /* sfx_ui_tap.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_ui_tap.wav; sourceTree = "<group>"; };
+		A0000000000000000000002B /* sfx_warp.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_warp.wav; sourceTree = "<group>"; };
+		B00000000000000000000001 /* KareMichi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KareMichi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000002 /* KareMichiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KareMichiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		G00000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		G00000000000000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D00000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				D00000000000000000000003 /* KareMichi */,
+				D00000000000000000000004 /* KareMichiTests */,
+				D00000000000000000000002 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D00000000000000000000002 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B00000000000000000000001 /* KareMichi.app */,
+				B00000000000000000000002 /* KareMichiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000003 /* KareMichi */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000001 /* KareMichiApp.swift */,
+				A00000000000000000000002 /* GameView.swift */,
+				A00000000000000000000003 /* Maze.swift */,
+				A00000000000000000000004 /* MazeGame.swift */,
+				A00000000000000000000005 /* MazeScene.swift */,
+				A00000000000000000000006 /* Palette.swift */,
+				A00000000000000000000007 /* ResultView.swift */,
+				A00000000000000000000008 /* Tuning.swift */,
+				A00000000000000000000011 /* DailyRun.swift */,
+				A00000000000000000000012 /* Diagnosis.swift */,
+				A00000000000000000000013 /* SeededGenerator.swift */,
+				A00000000000000000000014 /* Traveler.swift */,
+				A00000000000000000000015 /* GameAudio.swift */,
+				A00000000000000000000016 /* HUDSnapshot.swift */,
+				A00000000000000000000017 /* AdProvider.swift */,
+				A00000000000000000000018 /* RandomEvents.swift */,
+				A00000000000000000000019 /* CollectionView.swift */,
+				A0000000000000000000001A /* ShareCardView.swift */,
+				A0000000000000000000001B /* StoreManager.swift */,
+				A0000000000000000000001C /* SPEC_diagnosis_v2.md */,
+				D00000000000000000000005 /* Audio */,
+				A00000000000000000000010 /* Assets.xcassets */,
+			);
+			path = KareMichi;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000004 /* KareMichiTests */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000009 /* MazeGameTests.swift */,
+			);
+			path = KareMichiTests;
+			sourceTree = "<group>";
+		};
+		D00000000000000000000005 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000020 /* ambient_wind_loop20s.wav */,
+				A00000000000000000000021 /* bgm_musicbox_v4.wav */,
+				A00000000000000000000022 /* sfx_bump.wav */,
+				A00000000000000000000023 /* sfx_card_flip.wav */,
+				A00000000000000000000024 /* sfx_chest.wav */,
+				A00000000000000000000025 /* sfx_discovery.wav */,
+				A00000000000000000000026 /* sfx_footstep_a.wav */,
+				A00000000000000000000027 /* sfx_footstep_b.wav */,
+				A00000000000000000000028 /* sfx_footstep_c.wav */,
+				A00000000000000000000029 /* sfx_goal.wav */,
+				A0000000000000000000002A /* sfx_ui_tap.wav */,
+				A0000000000000000000002B /* sfx_warp.wav */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F00000000000000000000001 /* KareMichi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = I00000000000000000000002 /* Build configuration list for PBXNativeTarget "KareMichi" */;
+			buildPhases = (
+				G00000000000000000000001 /* Sources */,
+				G00000000000000000000002 /* Frameworks */,
+				G00000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KareMichi;
+			productName = KareMichi;
+			productReference = B00000000000000000000001 /* KareMichi.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F00000000000000000000002 /* KareMichiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = I00000000000000000000003 /* Build configuration list for PBXNativeTarget "KareMichiTests" */;
+			buildPhases = (
+				G00000000000000000000004 /* Sources */,
+				G00000000000000000000005 /* Frameworks */,
+				G00000000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				K00000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = KareMichiTests;
+			productName = KareMichiTests;
+			productReference = B00000000000000000000002 /* KareMichiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E00000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					F00000000000000000000001 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					F00000000000000000000002 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = F00000000000000000000001;
+					};
+				};
+			};
+			buildConfigurationList = I00000000000000000000001 /* Build configuration list for PBXProject "KareMichi" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ja,
+				Base,
+			);
+			mainGroup = D00000000000000000000001;
+			productRefGroup = D00000000000000000000002 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F00000000000000000000001 /* KareMichi */,
+				F00000000000000000000002 /* KareMichiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		G00000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C00000000000000000000010 /* Assets.xcassets in Resources */,
+				C00000000000000000000020 /* ambient_wind_loop20s.wav in Resources */,
+				C00000000000000000000021 /* bgm_musicbox_v4.wav in Resources */,
+				C00000000000000000000022 /* sfx_bump.wav in Resources */,
+				C00000000000000000000023 /* sfx_card_flip.wav in Resources */,
+				C00000000000000000000024 /* sfx_chest.wav in Resources */,
+				C00000000000000000000025 /* sfx_discovery.wav in Resources */,
+				C00000000000000000000026 /* sfx_footstep_a.wav in Resources */,
+				C00000000000000000000027 /* sfx_footstep_b.wav in Resources */,
+				C00000000000000000000028 /* sfx_footstep_c.wav in Resources */,
+				C00000000000000000000029 /* sfx_goal.wav in Resources */,
+				C0000000000000000000002A /* sfx_ui_tap.wav in Resources */,
+				C0000000000000000000002B /* sfx_warp.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		G00000000000000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		G00000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C00000000000000000000001 /* KareMichiApp.swift in Sources */,
+				C00000000000000000000002 /* GameView.swift in Sources */,
+				C00000000000000000000003 /* Maze.swift in Sources */,
+				C00000000000000000000004 /* MazeGame.swift in Sources */,
+				C00000000000000000000005 /* MazeScene.swift in Sources */,
+				C00000000000000000000006 /* Palette.swift in Sources */,
+				C00000000000000000000007 /* ResultView.swift in Sources */,
+				C00000000000000000000008 /* Tuning.swift in Sources */,
+				C00000000000000000000011 /* DailyRun.swift in Sources */,
+				C00000000000000000000012 /* Diagnosis.swift in Sources */,
+				C00000000000000000000013 /* SeededGenerator.swift in Sources */,
+				C00000000000000000000014 /* Traveler.swift in Sources */,
+				C00000000000000000000015 /* GameAudio.swift in Sources */,
+				C00000000000000000000016 /* HUDSnapshot.swift in Sources */,
+				C00000000000000000000017 /* AdProvider.swift in Sources */,
+				C00000000000000000000018 /* RandomEvents.swift in Sources */,
+				C00000000000000000000019 /* CollectionView.swift in Sources */,
+				C0000000000000000000001A /* ShareCardView.swift in Sources */,
+				C0000000000000000000001B /* StoreManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		G00000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C00000000000000000000009 /* MazeGameTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		K00000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F00000000000000000000001 /* KareMichi */;
+			targetProxy = J00000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		H00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		H00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		H00000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 67BCCSD863;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "まいにちの分かれ道";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.KareMichi;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		H00000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 67BCCSD863;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "まいにちの分かれ道";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.KareMichi;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		H00000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.KareMichiTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KareMichi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KareMichi";
+			};
+			name = Debug;
+		};
+		H00000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.KareMichiTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KareMichi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KareMichi";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		I00000000000000000000001 /* Build configuration list for PBXProject "KareMichi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H00000000000000000000001 /* Debug */,
+				H00000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		I00000000000000000000002 /* Build configuration list for PBXNativeTarget "KareMichi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H00000000000000000000003 /* Debug */,
+				H00000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		I00000000000000000000003 /* Build configuration list for PBXNativeTarget "KareMichiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H00000000000000000000005 /* Debug */,
+				H00000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E00000000000000000000001 /* Project object */;
+}

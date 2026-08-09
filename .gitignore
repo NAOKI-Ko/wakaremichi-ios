@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Xcode user-specific state and build products
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+DerivedData/
+build/
+*.app
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager local state
+.build/
+.swiftpm/
+
+# Local editor settings
+.idea/
+.vscode/
+
+# Local secrets and signing credentials
+.env
+.env.*
+!.env.example
+*.mobileprovision
+*.p12
+*.pem
+*.key
+GoogleService-Info.plist
+Secrets.xcconfig
+Local.xcconfig
+*.private.xcconfig
+
+# Locally generated validation artifacts
+Screenshots/
+Screenshots-Restart/
+Validation/
