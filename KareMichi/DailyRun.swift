@@ -1,6 +1,15 @@
 import Foundation
 import SwiftData
 
+/// 公式の日次探索と、結果画面から始める保存しないReplayを分離する。
+/// Replayはプロセス内だけで使い、SwiftDataへは保存しない。
+enum RunSessionMode: Equatable {
+    case official
+    case replay
+
+    var persistsOfficialDailyRun: Bool { self == .official }
+}
+
 /// 正常クリアした日に、洞窟からひとつだけ持ち帰る小さな品。
 ///
 /// v1ではSwiftDataへ識別子を保存せず、その日の迷路seedから復元する。
@@ -250,5 +259,46 @@ extension PlayStreakCalculator {
         return summary(completedDates: completedDates,
                        asOf: date,
                        calendar: calendar)
+    }
+}
+
+/// DailyRunの唯一の保存境界。Replayから誤って呼ばれても、既存記録へ
+/// insert／delete／overwriteを一切行わない。
+@MainActor
+enum DailyRunPersistence {
+
+    @discardableResult
+    static func saveIfOfficial(mode: RunSessionMode,
+                               context: ModelContext,
+                               existingRuns: [DailyRun],
+                               date: Date,
+                               seed: UInt64,
+                               log: RunLog,
+                               axes: PlayStyleAxes,
+                               traveler: Traveler,
+                               moodBefore: MoodBefore?,
+                               fogFeedback: FogFeedback?,
+                               calendar: Calendar = .current) -> Bool {
+        guard mode.persistsOfficialDailyRun else { return false }
+
+        let day = DailySeed.startOfDay(for: date, calendar: calendar)
+        for run in existingRuns
+            where DailySeed.startOfDay(for: run.date, calendar: calendar) == day {
+            context.delete(run)
+        }
+
+        context.insert(DailyRun(date: day,
+                                seed: Int(seed),
+                                log: log,
+                                axes: axes,
+                                traveler: traveler,
+                                moodBefore: moodBefore,
+                                fogFeedback: fogFeedback))
+        do {
+            try context.save()
+            return true
+        } catch {
+            return false
+        }
     }
 }

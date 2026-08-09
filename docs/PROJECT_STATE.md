@@ -12,9 +12,9 @@ Latest reviewed implementation/config commit:
 `e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
 
 State Snapshot:
-`e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
+`bfcd2a8c45d39ea0ac935696474fec144e67f700`
 
-Review target: none
+Review target: Result Rewarded Ads + Replay implementation commit produced by this work unit
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -25,7 +25,9 @@ Latest reviewed implementation/config status: APPROVED
 
 Current work unit: Result Rewarded Ads + Replay
 
-Current work unit review status: SPEC READY / IMPLEMENTATION NOT STARTED
+Current work unit review status: NOT REVIEWED
+
+Current work unit implementation status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -42,11 +44,23 @@ Continuity: Ready
 - Footstep volume restoration
 - Production App Icon integration
 
+# Implemented, Review Pending
+
+- Rewarded Result Gate after an official goal completion
+- Result Gate fail-open for unavailable, load, consent, SDK, and presentation failures
+- Explicit fallback to the saved result after an unrewarded ad cancellation
+- Reward-gated replay from ResultView
+- Memory-only replay using the official DailyRun date and seed
+- Replay persistence boundary protecting DailyRun, streak, collectibles, and first diagnosis
+- Exactly-once result/replay transitions
+
 Latest validation:
 
-- Unit Tests: 53 PASS
+- Unit Tests: 63 PASS (existing 53 plus 10 focused tests)
 - Debug Build: PASS
 - Release Generic iOS Device Build: PASS
+- First Visual QA: PASS at 320x568pt for Result Gate and ResultView replay action
+- Google test ad presentation: pending device/simulator network-dependent manual confirmation
 
 # Repository
 
@@ -77,7 +91,7 @@ Integrated and APPROVED
 
 # Release Blockers
 
-- Result Rewarded Ads + Replay implementation is not started.
+- Result Rewarded Ads + Replay exact-SHA review is pending.
 - Apple Developer Bundle ID alignment has not been verified.
 - App Store Connect Bundle ID alignment has not been verified.
 - AdMob Bundle ID alignment has not been verified.
@@ -86,16 +100,15 @@ Integrated and APPROVED
 
 # Next Work Unit
 
-Result Rewarded Ads + Replay
+Result Rewarded Ads + Replay Review Gate
 
-Status: SPEC READY / IMPLEMENTATION NOT STARTED
+Status: READY FOR REVIEW
 
 Specification: `docs/RESULT_REWARDED_ADS_REPLAY_SPEC.md`
 
-1. Add the rewarded Result Gate without permanently blocking result access.
-2. Add explicit rewarded replay from the result screen using the same daily seed.
-3. Keep replay transient and separate from the official DailyRun, streak, collectibles, and first diagnosis.
-4. Reuse the existing rewarded provider, test/production IDs, and UMP consent gate.
+1. Review the exact implementation commit produced by this work unit.
+2. Confirm Google official test-ad presentation, reward, cancellation, and dismissal reload when the network environment permits.
+3. Verify the Replay start and Replay result flow on a physical device.
 
 # Do Not Start
 

@@ -288,6 +288,10 @@ struct CollectionDetailView: View {
                   currentStreak: currentStreak,
                   resultDate: run.date,
                   alreadyPlayed: true,
+                  isReplay: false,
+                  isPurchased: false,
+                  adProvider: nil,
+                  onReplay: nil,
                   onClose: onClose)
     }
 }

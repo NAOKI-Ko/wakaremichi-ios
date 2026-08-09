@@ -99,6 +99,10 @@ struct ResultView: View {
     let currentStreak: Int
     let resultDate: Date
     let alreadyPlayed: Bool
+    let isReplay: Bool
+    let isPurchased: Bool
+    let adProvider: (any AdProvider)?
+    let onReplay: (() -> Void)?
     let onClose: (() -> Void)?
 
     @State private var trailProgress: CGFloat = 0
@@ -106,6 +110,9 @@ struct ResultView: View {
     @State private var showCollection = false
     @State private var shareImage: UIImage?
     @State private var isSharePresented = false
+    @State private var replayGate = RewardedGateState(kind: .replay)
+    @State private var replayUnavailable = false
+    @State private var replayMessage: String?
 
     private var archetype: Archetype { Diagnosis.archetype(for: axes) }
 
@@ -144,7 +151,8 @@ struct ResultView: View {
     }
 
     private var keepsake: Keepsake? {
-        Keepsake.earned(seed: seed, reachedGoal: log.reachedGoal)
+        guard !isReplay else { return nil }
+        return Keepsake.earned(seed: seed, reachedGoal: log.reachedGoal)
     }
 
     private var shareContent: ShareCardContent {
@@ -163,7 +171,7 @@ struct ResultView: View {
             VStack(spacing: 12) {
                 HStack {
                     Spacer()
-                    Text(alreadyPlayed ? "今日は、もう歩きました" : (log.reachedGoal ? "今日の探検結果" : "今日はここまで"))
+                    Text(resultTitle)
                         .font(.system(size: 16, weight: .medium))
                         .kerning(2)
                         .foregroundStyle(Palette.lampSUI.opacity(0.85))
@@ -231,10 +239,17 @@ struct ResultView: View {
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
 
-                Text("横にめくると、続きがあります")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.3))
-                    .padding(.bottom, 18)
+                VStack(spacing: 9) {
+                    if onReplay != nil {
+                        replayButton
+                    }
+
+                    Text("横にめくると、続きがあります")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
+                .padding(.horizontal, 36)
+                .padding(.bottom, 14)
             }
         }
         .sheet(isPresented: $showCollection) {
@@ -245,6 +260,86 @@ struct ResultView: View {
         }
         .onChange(of: currentCard) { _, _ in
             GameAudio.shared.play(.cardFlip)
+        }
+    }
+
+    private var resultTitle: String {
+        if isReplay { return "もう一度の探検結果" }
+        if alreadyPlayed { return "今日は、もう歩きました" }
+        return log.reachedGoal ? "今日の探検結果" : "今日はここまで"
+    }
+
+    private var replayButton: some View {
+        VStack(spacing: 5) {
+            Button {
+                requestReplay()
+            } label: {
+                HStack(spacing: 7) {
+                    if replayGate.isRequestInFlight {
+                        ProgressView().tint(.white)
+                    }
+                    Text(replayGate.isRequestInFlight
+                         ? "広告を読み込み中..."
+                         : (isPurchased ? "もう一度歩く" : "広告を見てもう一度"))
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(replayUnavailable ? 0.3 : 0.72))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Palette.surfaceSUI, in: Capsule())
+            }
+            .disabled(replayGate.isRequestInFlight
+                      || replayGate.didTransition
+                      || replayUnavailable)
+            .accessibilityIdentifier("replayAfterResultButton")
+
+            if let replayMessage {
+                Text(replayMessage)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.white.opacity(0.38))
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("replayAdStatusText")
+            }
+        }
+    }
+
+    private func requestReplay() {
+        guard replayGate.beginRequest() else { return }
+        GameAudio.shared.play(.uiTap)
+        replayMessage = nil
+
+        if isPurchased {
+            resolveReplay(.rewarded)
+            return
+        }
+
+        guard let adProvider else {
+            resolveReplay(.unavailable(.notLoaded))
+            return
+        }
+        adProvider.showRewardedAdOutcome { outcome in
+            DispatchQueue.main.async {
+                resolveReplay(outcome)
+            }
+        }
+    }
+
+    private func resolveReplay(_ outcome: RewardedAdOutcome) {
+        switch replayGate.resolve(outcome) {
+        case .startReplay:
+            onReplay?()
+        case .stay:
+            switch outcome {
+            case .cancelled:
+                replayMessage = "広告の視聴が完了しませんでした"
+            case .unavailable:
+                replayUnavailable = true
+                replayMessage = "現在、広告を利用できません"
+            case .rewarded:
+                break
+            }
+        case .none, .showResult:
+            break
         }
     }
 

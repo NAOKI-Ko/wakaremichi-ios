@@ -1,6 +1,7 @@
 import AVFoundation
 import SpriteKit
 import SwiftData
+import SwiftUI
 import UIKit
 import XCTest
 @testable import KareMichi
@@ -676,6 +677,83 @@ final class MazeGameTests: XCTestCase {
         XCTAssertFalse(dismissedWithoutReward.recordReward())
     }
 
+    func testResultGateRewardSuccessShowsResultExactlyOnce() {
+        var gate = RewardedGateState(kind: .result)
+        XCTAssertTrue(gate.beginRequest())
+        XCTAssertEqual(gate.resolve(.rewarded), .showResult)
+        XCTAssertTrue(gate.didTransition)
+        XCTAssertFalse(gate.isRequestInFlight)
+        XCTAssertEqual(gate.resolve(.rewarded), .none)
+        XCTAssertFalse(gate.beginRequest())
+    }
+
+    func testResultGateFailsOpenForEveryUnavailableReason() {
+        let failures: [RewardedAdFailure] = [
+            .notLoaded, .loadFailed, .consentBlocked,
+            .presentationFailed, .sdkError, .busy,
+        ]
+
+        for failure in failures {
+            var gate = RewardedGateState(kind: .result)
+            XCTAssertTrue(gate.beginRequest(), "failure=\(failure)")
+            XCTAssertEqual(gate.resolve(.unavailable(failure)),
+                           .showResult,
+                           "failure=\(failure)")
+            XCTAssertFalse(gate.isRequestInFlight, "failure=\(failure)")
+            XCTAssertTrue(gate.didTransition, "failure=\(failure)")
+        }
+    }
+
+    func testResultGateCancellationReturnsToGateAndOffersFallback() {
+        var gate = RewardedGateState(kind: .result)
+        XCTAssertTrue(gate.beginRequest())
+        XCTAssertEqual(gate.resolve(.cancelled), .stay)
+        XCTAssertFalse(gate.isRequestInFlight)
+        XCTAssertFalse(gate.didTransition)
+        XCTAssertTrue(gate.allowsResultFallback)
+        XCTAssertEqual(gate.useResultFallback(), .showResult)
+        XCTAssertEqual(gate.useResultFallback(), .none)
+    }
+
+    func testReplayGateRequiresRewardAndGrantsExactlyOnce() {
+        for outcome in [RewardedAdOutcome.cancelled,
+                        .unavailable(.notLoaded),
+                        .unavailable(.loadFailed),
+                        .unavailable(.consentBlocked),
+                        .unavailable(.presentationFailed),
+                        .unavailable(.sdkError)] {
+            var rejected = RewardedGateState(kind: .replay)
+            XCTAssertTrue(rejected.beginRequest())
+            XCTAssertEqual(rejected.resolve(outcome), .stay)
+            XCTAssertFalse(rejected.didTransition)
+            XCTAssertFalse(rejected.isRequestInFlight)
+        }
+
+        var granted = RewardedGateState(kind: .replay)
+        XCTAssertTrue(granted.beginRequest())
+        XCTAssertEqual(granted.resolve(.rewarded), .startReplay)
+        XCTAssertEqual(granted.resolve(.rewarded), .none)
+        XCTAssertFalse(granted.beginRequest())
+    }
+
+    @MainActor
+    func testMockRewardedProviderCanDriveAllGateOutcomesWithoutNetwork() {
+        let outcomes: [RewardedAdOutcome] = [
+            .rewarded,
+            .cancelled,
+            .unavailable(.loadFailed),
+        ]
+        let completions = outcomes.map { outcome in
+            let completed = expectation(description: "mock \(outcome)")
+            MockAdProvider(outcome: outcome).showRewardedAdOutcome { received in
+                XCTAssertEqual(received, outcome)
+                completed.fulfill()
+            }
+            return completed
+        }
+        wait(for: completions, timeout: 2)
+    }
+
     func testAdConsentGateStartsOnceAndRequiresPermission() {
         var allowed = AdConsentGate()
         XCTAssertEqual(allowed.state, .notStarted)
@@ -710,6 +788,23 @@ final class MazeGameTests: XCTestCase {
             completed.fulfill()
         }
         wait(for: [completed], timeout: 1)
+    }
+
+    @MainActor
+    func testGoogleProviderReportsConsentBlockedWithoutNetworkAdRequest() {
+        let consent = StubAdConsentProvider(canRequestAds: false)
+        let provider = GoogleMobileAdsProvider(
+            rewardedAdUnitID: "ca-app-pub-3940256099942544/1712485313",
+            consentProvider: consent
+        )
+
+        let completed = expectation(description: "consent blocked outcome")
+        provider.showRewardedAdOutcome { outcome in
+            XCTAssertEqual(outcome, .unavailable(.consentBlocked))
+            completed.fulfill()
+        }
+        wait(for: [completed], timeout: 1)
+        XCTAssertEqual(consent.requestCount, 1)
     }
 
     @MainActor
@@ -761,7 +856,7 @@ final class MazeGameTests: XCTestCase {
         log.openCellCount = 10
 
         let axes = Diagnosis.axes(from: log)
-        for axis in Axis.allCases {
+        for axis in KareMichi.Axis.allCases {
             XCTAssertGreaterThanOrEqual(axes.value(axis), 0)
             XCTAssertLessThanOrEqual(axes.value(axis), 1)
         }
@@ -769,8 +864,8 @@ final class MazeGameTests: XCTestCase {
 
     func testAllTwelveArchetypesAndTieBreakAreSafe() {
         var names: Set<String> = []
-        for primary in Axis.allCases {
-            for secondary in Axis.allCases where secondary != primary {
+        for primary in KareMichi.Axis.allCases {
+            for secondary in KareMichi.Axis.allCases where secondary != primary {
                 var axes = PlayStyleAxes(intuition: 0, exploration: 0,
                                          caution: 0, flexibility: 0)
                 set(1, axis: primary, axes: &axes)
@@ -1071,6 +1166,181 @@ final class MazeGameTests: XCTestCase {
                        event.choices[2].impliedAxis)
     }
 
+    @MainActor
+    func testReplaySessionUsesSameDateSeedMazeAndFreshGameplayState() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))
+        let date = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026,
+                                                                    month: 8,
+                                                                    day: 10)))
+        let coordinator = RunCoordinator(date: date)
+        let officialSeed = coordinator.seed
+        let officialMaze = mazeSnapshot(coordinator.maze)
+        coordinator.startPlaying(traveler: .wanderer)
+
+        let officialScene = try XCTUnwrap(coordinator.scene)
+        let neighbor = try XCTUnwrap(openNeighbor(of: officialScene.game.player,
+                                                  in: officialScene.game.maze))
+        officialScene.game.advance(to: neighbor)
+        XCTAssertGreaterThan(officialScene.game.steps, 0)
+
+        coordinator.startReplay(seed: officialSeed,
+                                date: date,
+                                traveler: .wanderer)
+
+        let replayScene = try XCTUnwrap(coordinator.scene)
+        let pristine = MazeGame(maze: replayScene.game.maze)
+        XCTAssertEqual(coordinator.sessionMode, .replay)
+        XCTAssertEqual(coordinator.sessionDate, date)
+        XCTAssertEqual(coordinator.seed, officialSeed)
+        XCTAssertEqual(mazeSnapshot(coordinator.maze), officialMaze)
+        XCTAssertEqual(replayScene.game.player, replayScene.game.maze.start)
+        XCTAssertEqual(replayScene.game.path, [replayScene.game.maze.start])
+        XCTAssertEqual(replayScene.game.steps, 0)
+        XCTAssertEqual(replayScene.game.stamina, Tuning.staminaMax)
+        XCTAssertEqual(replayScene.game.explored, pristine.explored)
+        XCTAssertEqual(replayScene.game.walked, pristine.walked)
+        XCTAssertTrue(replayScene.game.openedChests.isEmpty)
+        XCTAssertNil(replayScene.game.eventOutcome)
+        XCTAssertFalse(replayScene.game.everReachedGoal)
+        XCTAssertEqual(replayScene.todaysEvent?.id, officialScene.todaysEvent?.id)
+    }
+
+    @MainActor
+    func testReplayGoalDoesNotInsertOfficialDailyRun() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: DailyRun.self, configurations: configuration)
+        let context = container.mainContext
+        var replayLog = RunLog()
+        replayLog.reachedGoal = true
+        replayLog.steps = 222
+
+        let saved = DailyRunPersistence.saveIfOfficial(
+            mode: .replay,
+            context: context,
+            existingRuns: [],
+            date: Date(timeIntervalSince1970: 1_775_000_000),
+            seed: 20_260_810,
+            log: replayLog,
+            axes: .neutral,
+            traveler: .wanderer,
+            moodBefore: nil,
+            fogFeedback: nil
+        )
+
+        XCTAssertFalse(saved)
+        XCTAssertTrue(try context.fetch(FetchDescriptor<DailyRun>()).isEmpty)
+    }
+
+    @MainActor
+    func testReplayDoesNotOverwriteOfficialHistoryOrDerivedProgress() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: DailyRun.self, configurations: configuration)
+        let context = container.mainContext
+        let date = Date(timeIntervalSince1970: 1_775_000_000)
+        var officialLog = RunLog()
+        officialLog.reachedGoal = true
+        officialLog.steps = 41
+        officialLog.exploredCellCount = 60
+        officialLog.openCellCount = 100
+        let officialAxes = PlayStyleAxes(intuition: 0.8,
+                                         exploration: 0.6,
+                                         caution: 0.3,
+                                         flexibility: 0.4)
+        let official = DailyRun(date: date,
+                                seed: 20_260_810,
+                                log: officialLog,
+                                axes: officialAxes,
+                                traveler: .owl,
+                                moodBefore: .calm,
+                                fogFeedback: nil)
+        context.insert(official)
+        try context.save()
+
+        let beforeRuns = try context.fetch(FetchDescriptor<DailyRun>())
+        let beforeStreak = PlayStreakCalculator.summary(runs: beforeRuns, asOf: date)
+        let beforeKeepsakes = Keepsake.acquired(from: beforeRuns)
+
+        var replayLog = RunLog()
+        replayLog.reachedGoal = true
+        replayLog.steps = 999
+        replayLog.chestOpened = true
+        let replayAxes = PlayStyleAxes(intuition: 0.1,
+                                       exploration: 0.2,
+                                       caution: 0.9,
+                                       flexibility: 0.95)
+        XCTAssertFalse(DailyRunPersistence.saveIfOfficial(
+            mode: .replay,
+            context: context,
+            existingRuns: beforeRuns,
+            date: date,
+            seed: 99,
+            log: replayLog,
+            axes: replayAxes,
+            traveler: .fox,
+            moodBefore: nil,
+            fogFeedback: .deep
+        ))
+
+        let afterRuns = try context.fetch(FetchDescriptor<DailyRun>())
+        let restored = try XCTUnwrap(afterRuns.first)
+        XCTAssertEqual(afterRuns.count, 1)
+        XCTAssertEqual(restored.seed, 20_260_810)
+        XCTAssertEqual(restored.steps, 41)
+        XCTAssertTrue(restored.reachedGoal)
+        XCTAssertEqual(restored.axes.intuition, officialAxes.intuition)
+        XCTAssertEqual(restored.axes.exploration, officialAxes.exploration)
+        XCTAssertEqual(restored.axes.caution, officialAxes.caution)
+        XCTAssertEqual(restored.axes.flexibility, officialAxes.flexibility)
+        XCTAssertEqual(restored.traveler, .owl)
+        XCTAssertEqual(PlayStreakCalculator.summary(runs: afterRuns, asOf: date), beforeStreak)
+        XCTAssertEqual(Keepsake.acquired(from: afterRuns), beforeKeepsakes)
+        XCTAssertEqual(afterRuns.count, beforeRuns.count)
+    }
+
+    @MainActor
+    func testResultGateAndReplayActionRenderOnSmallPhone() throws {
+        let size = CGSize(width: 320, height: 568)
+        let gate = ResultGateView(isPurchased: false,
+                                  adProvider: MockAdProvider(outcome: .cancelled),
+                                  onShowResult: {})
+            .frame(width: size.width, height: size.height)
+        try renderVisual(gate,
+                         size: size,
+                         name: "Result Gate — small iPhone",
+                         path: "/tmp/KareMichi-result-gate-visual.png")
+
+        var log = RunLog()
+        log.path = [Coord(x: 1, y: 1), Coord(x: 2, y: 1), Coord(x: 2, y: 2)]
+        log.steps = 42
+        log.elapsed = 38
+        log.reachedGoal = true
+        log.exploredCellCount = 70
+        log.openCellCount = 100
+        log.chestOpened = true
+
+        let result = ResultView(log: log,
+                                axes: .neutral,
+                                feedback: .usual,
+                                traveler: .wanderer,
+                                seed: 20_260_810,
+                                recentAxes: [],
+                                totalDayCount: 1,
+                                currentStreak: 1,
+                                resultDate: Date(timeIntervalSince1970: 1_775_000_000),
+                                alreadyPlayed: false,
+                                isReplay: false,
+                                isPurchased: false,
+                                adProvider: MockAdProvider(outcome: .rewarded),
+                                onReplay: {},
+                                onClose: nil)
+            .frame(width: size.width, height: size.height)
+        try renderVisual(result,
+                         size: size,
+                         name: "Result Replay CTA — small iPhone",
+                         path: "/tmp/KareMichi-result-replay-visual.png")
+    }
+
     func testCollectionAndStoreBranchesDoNotNeedAConfiguredProduct() {
         XCTAssertEqual(StoreManager.remainingAdActions(isPurchased: false,
                                                        replayCount: 1,
@@ -1242,7 +1512,7 @@ final class MazeGameTests: XCTestCase {
     }
 
     private func set(_ value: Double,
-                     axis: Axis,
+                     axis: KareMichi.Axis,
                      axes: inout PlayStyleAxes) {
         switch axis {
         case .intuition: axes.intuition = value
@@ -1250,6 +1520,36 @@ final class MazeGameTests: XCTestCase {
         case .caution: axes.caution = value
         case .flexibility: axes.flexibility = value
         }
+    }
+
+    @MainActor
+    private func renderVisual<V: View>(_ view: V,
+                                       size: CGSize,
+                                       name: String,
+                                       path: String) throws {
+        let window = UIWindow(frame: CGRect(origin: .zero, size: size))
+        let controller = UIHostingController(rootView: view.environment(\.colorScheme, .dark))
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        controller.view.frame = window.bounds
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.15))
+
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { _ in
+            XCTAssertTrue(controller.view.drawHierarchy(in: controller.view.bounds,
+                                                        afterScreenUpdates: true))
+        }
+        XCTAssertEqual(image.size.width, size.width)
+        XCTAssertEqual(image.size.height, size.height)
+        let attachment = XCTAttachment(image: image)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        try XCTUnwrap(image.pngData()).write(to: URL(fileURLWithPath: path),
+                                             options: .atomic)
+        window.isHidden = true
     }
 
     @MainActor

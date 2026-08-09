@@ -89,7 +89,7 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
     private var hasStartedMobileAds = false
     private var isLoading = false
     private var isPresenting = false
-    private var pendingCompletion: ((Bool) -> Void)?
+    private var pendingCompletion: ((RewardedAdOutcome) -> Void)?
     private var session = RewardedAdSession()
 
     convenience init(rewardedAdUnitID: String) {
@@ -109,9 +109,9 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
         }
     }
 
-    func showRewardedAd(completion: @escaping (Bool) -> Void) {
+    func showRewardedAdOutcome(completion: @escaping (RewardedAdOutcome) -> Void) {
         guard pendingCompletion == nil, !isPresenting else {
-            completion(false)
+            completion(.unavailable(.busy))
             return
         }
 
@@ -124,14 +124,14 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
         case .allowed:
             presentOrLoad()
         case .denied:
-            completePending(success: false)
+            completePending(.unavailable(.consentBlocked))
         }
     }
 
     private func finishConsent(canRequestAds: Bool) {
         guard let isAllowed = consentGate.finish(canRequestAds: canRequestAds) else { return }
         guard isAllowed else {
-            completePending(success: false)
+            completePending(.unavailable(.consentBlocked))
             return
         }
 
@@ -172,14 +172,16 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
                 }
             } catch {
                 isLoading = false
-                completePending(success: false)
+                completePending(.unavailable(.loadFailed))
             }
         }
     }
 
     private func present(_ ad: RewardedAd) {
         guard let viewController = Self.topViewController() else {
-            completePending(success: false)
+            rewardedAd = nil
+            completePending(.unavailable(.presentationFailed))
+            loadIfNeeded()
             return
         }
 
@@ -196,22 +198,26 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
 
     func ad(_ ad: FullScreenPresentingAd,
             didFailToPresentFullScreenContentWithError error: Error) {
-        finishPresentation()
+        finishPresentation(failure: .presentationFailed)
     }
 
-    private func finishPresentation() {
+    private func finishPresentation(failure: RewardedAdFailure? = nil) {
         rewardedAd = nil
         isPresenting = false
         if let didEarnReward = session.finish() {
-            completePending(success: didEarnReward)
+            if let failure {
+                completePending(.unavailable(failure))
+            } else {
+                completePending(didEarnReward ? .rewarded : .cancelled)
+            }
         }
         loadIfNeeded()
     }
 
-    private func completePending(success: Bool) {
+    private func completePending(_ outcome: RewardedAdOutcome) {
         guard let completion = pendingCompletion else { return }
         pendingCompletion = nil
-        completion(success)
+        completion(outcome)
     }
 
     private static func topViewController() -> UIViewController? {

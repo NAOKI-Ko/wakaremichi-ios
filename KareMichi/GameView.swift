@@ -7,11 +7,12 @@ import SwiftData
 @Observable
 final class RunCoordinator {
 
-    enum Phase {
+    enum Phase: Equatable {
         case moodInput
         case playing
         case continuePrompt
         case fogFeedback
+        case resultGate
         case result
     }
 
@@ -29,14 +30,24 @@ final class RunCoordinator {
     /// 生成された迷路の自己チェックに失敗したときだけ入る
     var integrityWarning: String?
 
-    let seed: UInt64
-    let maze: Maze
+    private(set) var sessionMode: RunSessionMode = .official
+    private(set) var sessionDate: Date
+    private(set) var seed: UInt64
+    private(set) var maze: Maze
+
+    var isReplaySession: Bool { sessionMode == .replay }
 
     init(date: Date = Date()) {
         let s = DailySeed.seed(for: date)
+        sessionDate = date
         seed = s
         maze = Maze.generate(seed: s)
 
+        validateMaze()
+    }
+
+    private func validateMaze() {
+        integrityWarning = nil
         // 通路が2マス幅になっていないか、ゴールに行けるかを起動時に確認する。
         // 以前の実装で「道が3マス幅に見える」不具合があったため、
         // 同じ壊れ方をしたらすぐ気づけるようにしてある。
@@ -45,6 +56,34 @@ final class RunCoordinator {
         } else if !maze.isGoalReachable() {
             integrityWarning = "迷路の生成に異常があります(ゴールに到達できません)"
         }
+    }
+
+    /// 保存済みの公式Dailyと同じ日付・seedから、新しい一時セッションを作る。
+    /// MazeGame自体を新規生成するため、位置・体力・霧・宝箱・ログは初期状態になる。
+    func startReplay(seed: UInt64,
+                     date: Date,
+                     traveler: Traveler,
+                     recentEventThemes: [EventTheme] = []) {
+        sessionMode = .replay
+        sessionDate = date
+        self.seed = seed
+        maze = Maze.generate(seed: seed)
+        validateMaze()
+
+        mood = nil
+        feedback = nil
+        log = nil
+        axes = .neutral
+        hud = nil
+        pausedLog = nil
+        pendingEvent = nil
+        startPlaying(traveler: traveler, recentEventThemes: recentEventThemes)
+    }
+
+    /// Result Gateの複数callbackが競合しても、遷移は一度だけにする。
+    func showResultFromGate() {
+        guard phase == .resultGate else { return }
+        phase = .result
     }
 
     func startPlaying(traveler: Traveler, recentEventThemes: [EventTheme] = []) {
@@ -116,7 +155,9 @@ struct RootView: View {
 
     /// 保存直後、@Queryへ今日の記録が届く前でも節目の日数を1日少なく見せない。
     private var totalDayCount: Int {
-        guard case .result = coordinator.phase, coordinator.log != nil else {
+        guard !coordinator.isReplaySession,
+              case .result = coordinator.phase,
+              coordinator.log != nil else {
             return allRuns.count
         }
         return todaysRun == nil ? allRuns.count + 1 : allRuns.count
@@ -127,7 +168,8 @@ struct RootView: View {
     private var streakSummary: PlayStreakSummary {
         let now = Date()
         let pendingCompletionDate: Date?
-        if case .result = coordinator.phase,
+        if !coordinator.isReplaySession,
+           case .result = coordinator.phase,
            coordinator.log?.reachedGoal == true {
             pendingCompletionDate = now
         } else {
@@ -144,10 +186,16 @@ struct RootView: View {
             Palette.backgroundSUI.ignoresSafeArea()
 
             if let traveler {
+                if coordinator.isReplaySession {
+                    // 保存済みの今日のDailyRunより、一時Replayセッションを優先する。
+                    playFlow(traveler: traveler)
+                } else if coordinator.phase == .resultGate {
+                    // 正式結果の保存後も、保存済み結果へショートカットせずGateを保つ。
+                    playFlow(traveler: traveler)
                 // 保存直後も、いま完了したプレイの結果として見せる。
                 // 保存による @Query の更新を先に判定すると、その場でいきなり
                 // 「今日は、もう歩きました」に置き換わってしまうため。
-                if case .result = coordinator.phase, coordinator.log != nil {
+                } else if case .result = coordinator.phase, coordinator.log != nil {
                     playFlow(traveler: traveler)
                 } else if let run = todaysRun {
                     // 今日はもう歩き終わっている
@@ -161,6 +209,17 @@ struct RootView: View {
                                currentStreak: streakSummary.currentStreak,
                                resultDate: run.date,
                                alreadyPlayed: true,
+                               isReplay: false,
+                               isPurchased: store.isPurchased,
+                               adProvider: Ads.provider,
+                               onReplay: {
+                                   coordinator.startReplay(
+                                       seed: UInt64(max(run.seed, 0)),
+                                       date: run.date,
+                                       traveler: run.traveler,
+                                       recentEventThemes: recentEventThemes
+                                   )
+                               },
                                onClose: nil)
                 } else {
                     playFlow(traveler: traveler)
@@ -260,7 +319,19 @@ struct RootView: View {
             FogFeedbackView { picked in
                 coordinator.feedback = picked
                 save(traveler: traveler)
-                coordinator.phase = .result
+                if coordinator.log?.reachedGoal == true,
+                   !coordinator.isReplaySession {
+                    // 正式DailyRunはここですでに保存済み。広告成否は完了記録に影響しない。
+                    coordinator.phase = .resultGate
+                } else {
+                    coordinator.phase = .result
+                }
+            }
+
+        case .resultGate:
+            ResultGateView(isPurchased: store.isPurchased,
+                           adProvider: Ads.provider) {
+                coordinator.showResultFromGate()
             }
 
         case .result:
@@ -272,9 +343,21 @@ struct RootView: View {
                            seed: coordinator.seed,
                            recentAxes: recentAxes,
                            totalDayCount: totalDayCount,
-                           currentStreak: streakSummary.currentStreak,
-                           resultDate: Date(),
+                           currentStreak: coordinator.isReplaySession
+                               ? 0 : streakSummary.currentStreak,
+                           resultDate: coordinator.sessionDate,
                            alreadyPlayed: false,
+                           isReplay: coordinator.isReplaySession,
+                           isPurchased: store.isPurchased,
+                           adProvider: Ads.provider,
+                           onReplay: {
+                               coordinator.startReplay(
+                                   seed: coordinator.seed,
+                                   date: coordinator.sessionDate,
+                                   traveler: traveler,
+                                   recentEventThemes: recentEventThemes
+                               )
+                           },
                            onClose: nil)
             }
         }
@@ -282,22 +365,16 @@ struct RootView: View {
 
     private func save(traveler: Traveler) {
         guard let log = coordinator.log else { return }
-        let today = DailySeed.startOfDay(for: Date())
-
-        // 同じ日の記録があれば消してから入れ直す(上書き)
-        for run in allRuns where DailySeed.startOfDay(for: run.date) == today {
-            context.delete(run)
-        }
-
-        let run = DailyRun(date: today,
-                           seed: Int(coordinator.seed),
-                           log: log,
-                           axes: coordinator.axes,
-                           traveler: traveler,
-                           moodBefore: coordinator.mood,
-                           fogFeedback: coordinator.feedback)
-        context.insert(run)
-        try? context.save()
+        DailyRunPersistence.saveIfOfficial(mode: coordinator.sessionMode,
+                                           context: context,
+                                           existingRuns: allRuns,
+                                           date: coordinator.sessionDate,
+                                           seed: coordinator.seed,
+                                           log: log,
+                                           axes: coordinator.axes,
+                                           traveler: traveler,
+                                           moodBefore: coordinator.mood,
+                                           fogFeedback: coordinator.feedback)
     }
 }
 
@@ -412,6 +489,108 @@ struct EventChoiceView: View {
             .padding(.horizontal, 24)
         }
         .accessibilityIdentifier("eventChoiceOverlay")
+    }
+}
+
+// MARK: - 正式結果を見る前のRewarded Gate
+
+struct ResultGateView: View {
+
+    let isPurchased: Bool
+    let adProvider: any AdProvider
+    let onShowResult: () -> Void
+
+    @State private var gate = RewardedGateState(kind: .result)
+
+    var body: some View {
+        VStack(spacing: 22) {
+            Spacer()
+
+            Image(systemName: "lightbulb.circle.fill")
+                .font(.system(size: 38, weight: .light))
+                .foregroundStyle(Palette.lampSUI.opacity(0.82))
+
+            VStack(spacing: 10) {
+                Text("今日の歩みを見る")
+                    .font(.system(size: 19, weight: .medium))
+                    .kerning(1.5)
+                    .foregroundStyle(Palette.lampSUI.opacity(0.9))
+
+                Text("歩いた道は、もう記録されています")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white.opacity(0.45))
+            }
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                Button {
+                    requestResult()
+                } label: {
+                    HStack(spacing: 8) {
+                        if gate.isRequestInFlight {
+                            ProgressView().tint(Palette.backgroundSUI)
+                        }
+                        Text(gate.isRequestInFlight
+                             ? "広告を読み込み中..."
+                             : (isPurchased ? "結果を見る" : "広告を見て結果を見る"))
+                    }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(Palette.backgroundSUI)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Palette.lampSUI, in: Capsule())
+                }
+                .disabled(gate.isRequestInFlight || gate.didTransition)
+                .accessibilityIdentifier("resultGateRewardButton")
+
+                if gate.allowsResultFallback {
+                    Button {
+                        guard gate.useResultFallback() == .showResult else { return }
+                        GameAudio.shared.play(.uiTap)
+                        onShowResult()
+                    } label: {
+                        Text("結果を見る")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white.opacity(0.65))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Palette.surfaceSUI, in: Capsule())
+                    }
+                    .accessibilityIdentifier("resultGateFallbackButton")
+                }
+            }
+            .padding(.horizontal, 36)
+            .padding(.bottom, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Palette.backgroundSUI.ignoresSafeArea())
+        .accessibilityIdentifier("resultGateView")
+    }
+
+    private func requestResult() {
+        guard gate.beginRequest() else { return }
+        GameAudio.shared.play(.uiTap)
+
+        if isPurchased {
+            resolve(.rewarded)
+            return
+        }
+
+        adProvider.showRewardedAdOutcome { outcome in
+            DispatchQueue.main.async {
+                resolve(outcome)
+            }
+        }
+    }
+
+    private func resolve(_ outcome: RewardedAdOutcome) {
+        switch gate.resolve(outcome) {
+        case .showResult:
+            onShowResult()
+        case .none, .stay, .startReplay:
+            break
+        }
     }
 }
 
