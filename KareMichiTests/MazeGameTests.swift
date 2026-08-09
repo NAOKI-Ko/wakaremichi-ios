@@ -754,6 +754,108 @@ final class MazeGameTests: XCTestCase {
         wait(for: completions, timeout: 2)
     }
 
+    @MainActor
+    func testGoogleReadyOnlyReturnsNotLoadedImmediatelyWithoutWaitingForConsentOrLoad() {
+        let consent = HoldingAdConsentProvider()
+        let provider = GoogleMobileAdsProvider(
+            rewardedAdUnitID: "ca-app-pub-3940256099942544/1712485313",
+            consentProvider: consent
+        )
+        var received: RewardedAdOutcome?
+
+        provider.showRewardedAdIfReady { received = $0 }
+
+        XCTAssertEqual(received, .unavailable(.notLoaded))
+        XCTAssertEqual(consent.requestCount, 1)
+        XCTAssertFalse(provider.isRewardedAdReady)
+    }
+
+    @MainActor
+    func testResultGateReadyOnlyNotLoadedClearsFlightAndFailsOpen() {
+        let provider = MockAdProvider(outcome: .rewarded,
+                                      isRewardedAdReady: false)
+        var gate = RewardedGateState(kind: .result)
+        XCTAssertTrue(gate.beginRequest())
+
+        provider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(gate.resolve(outcome), .showResult)
+        }
+
+        XCTAssertFalse(gate.isRequestInFlight)
+        XCTAssertTrue(gate.didTransition)
+    }
+
+    @MainActor
+    func testResultGateReadyOnlyConsentStatesNeverRemainInFlight() {
+        let gatheringConsent = HoldingAdConsentProvider()
+        let gatheringProvider = GoogleMobileAdsProvider(
+            rewardedAdUnitID: "ca-app-pub-3940256099942544/1712485313",
+            consentProvider: gatheringConsent
+        )
+        gatheringProvider.start()
+
+        var gatheringGate = RewardedGateState(kind: .result)
+        XCTAssertTrue(gatheringGate.beginRequest())
+        gatheringProvider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(gatheringGate.resolve(outcome), .showResult)
+        }
+        XCTAssertFalse(gatheringGate.isRequestInFlight)
+
+        let deniedProvider = GoogleMobileAdsProvider(
+            rewardedAdUnitID: "ca-app-pub-3940256099942544/1712485313",
+            consentProvider: StubAdConsentProvider(canRequestAds: false)
+        )
+        deniedProvider.start()
+
+        var deniedGate = RewardedGateState(kind: .result)
+        XCTAssertTrue(deniedGate.beginRequest())
+        deniedProvider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(outcome, .unavailable(.consentBlocked))
+            XCTAssertEqual(deniedGate.resolve(outcome), .showResult)
+        }
+        XCTAssertFalse(deniedGate.isRequestInFlight)
+    }
+
+    @MainActor
+    func testReplayReadyOnlyNotLoadedDoesNotStartReplay() {
+        let provider = MockAdProvider(outcome: .rewarded,
+                                      isRewardedAdReady: false)
+        var gate = RewardedGateState(kind: .replay)
+        XCTAssertTrue(gate.beginRequest())
+
+        provider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(gate.resolve(outcome), .stay)
+        }
+
+        XCTAssertFalse(gate.isRequestInFlight)
+        XCTAssertFalse(gate.didTransition)
+    }
+
+    @MainActor
+    func testReadyOnlyRewardStillTransitionsResultAndReplay() {
+        let provider = MockAdProvider(outcome: .rewarded,
+                                      isRewardedAdReady: true)
+        var resultGate = RewardedGateState(kind: .result)
+        var replayGate = RewardedGateState(kind: .replay)
+        XCTAssertTrue(resultGate.beginRequest())
+        XCTAssertTrue(replayGate.beginRequest())
+
+        let resultCompleted = expectation(description: "ready result reward")
+        provider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(resultGate.resolve(outcome), .showResult)
+            resultCompleted.fulfill()
+        }
+        let replayCompleted = expectation(description: "ready replay reward")
+        provider.showRewardedAdIfReady { outcome in
+            XCTAssertEqual(replayGate.resolve(outcome), .startReplay)
+            replayCompleted.fulfill()
+        }
+
+        wait(for: [resultCompleted, replayCompleted], timeout: 1)
+        XCTAssertTrue(resultGate.didTransition)
+        XCTAssertTrue(replayGate.didTransition)
+    }
+
     func testAdConsentGateStartsOnceAndRequiresPermission() {
         var allowed = AdConsentGate()
         XCTAssertEqual(allowed.state, .notStarted)
@@ -1564,6 +1666,16 @@ final class MazeGameTests: XCTestCase {
         func requestConsent(completion: @escaping (Bool) -> Void) {
             requestCount += 1
             completion(canRequestAds)
+        }
+    }
+
+    @MainActor
+    private final class HoldingAdConsentProvider: AdConsentProviding {
+        private(set) var requestCount = 0
+
+        func requestConsent(completion: @escaping (Bool) -> Void) {
+            requestCount += 1
+            // Consent gatheringを再現し、意図的にcompletionを保留する。
         }
     }
 }

@@ -577,7 +577,7 @@ struct ResultGateView: View {
             return
         }
 
-        adProvider.showRewardedAdOutcome { outcome in
+        adProvider.showRewardedAdIfReady { outcome in
             DispatchQueue.main.async {
                 resolve(outcome)
             }

@@ -317,7 +317,7 @@ struct ResultView: View {
             resolveReplay(.unavailable(.notLoaded))
             return
         }
-        adProvider.showRewardedAdOutcome { outcome in
+        adProvider.showRewardedAdIfReady { outcome in
             DispatchQueue.main.async {
                 resolveReplay(outcome)
             }

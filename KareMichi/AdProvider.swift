@@ -21,12 +21,25 @@ enum RewardedAdOutcome: Equatable {
 /// ゲーム側はSDKの型を知らず、reward／cancel／提示不能だけを受け取る。
 @MainActor
 protocol AdProvider {
+    var isRewardedAdReady: Bool { get }
     func start()
     func showRewardedAdOutcome(completion: @escaping (RewardedAdOutcome) -> Void)
+    func showRewardedAdIfReady(completion: @escaping (RewardedAdOutcome) -> Void)
 }
 
 extension AdProvider {
+    var isRewardedAdReady: Bool { true }
+
     func start() {}
+
+    /// Result／Replay Gate専用。待機型の既存導線と分け、未準備なら即時に返す。
+    func showRewardedAdIfReady(completion: @escaping (RewardedAdOutcome) -> Void) {
+        guard isRewardedAdReady else {
+            completion(.unavailable(.notLoaded))
+            return
+        }
+        showRewardedAdOutcome(completion: completion)
+    }
 
     /// 既存の「続きから／はじめから」は成功可否だけを必要とするため、
     /// 従来のBool APIを残して呼び出し側の意味を変えない。
@@ -41,15 +54,22 @@ extension AdProvider {
 struct MockAdProvider: AdProvider {
     let outcome: RewardedAdOutcome
     let delay: TimeInterval
+    let isRewardedAdReady: Bool
 
-    init(result: Bool = true, delay: TimeInterval = 1.0) {
+    init(result: Bool = true,
+         delay: TimeInterval = 1.0,
+         isRewardedAdReady: Bool = true) {
         self.outcome = result ? .rewarded : .cancelled
         self.delay = delay
+        self.isRewardedAdReady = isRewardedAdReady
     }
 
-    init(outcome: RewardedAdOutcome, delay: TimeInterval = 0) {
+    init(outcome: RewardedAdOutcome,
+         delay: TimeInterval = 0,
+         isRewardedAdReady: Bool = true) {
         self.outcome = outcome
         self.delay = delay
+        self.isRewardedAdReady = isRewardedAdReady
     }
 
     func showRewardedAdOutcome(completion: @escaping (RewardedAdOutcome) -> Void) {
@@ -61,6 +81,8 @@ struct MockAdProvider: AdProvider {
 
 /// 設定不足時にゲームを止めず、広告失敗として元の選択画面へ戻す。
 struct UnavailableAdProvider: AdProvider {
+    let isRewardedAdReady = false
+
     func showRewardedAdOutcome(completion: @escaping (RewardedAdOutcome) -> Void) {
         completion(.unavailable(.notLoaded))
     }

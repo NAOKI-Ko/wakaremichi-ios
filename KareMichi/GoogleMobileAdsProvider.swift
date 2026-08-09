@@ -92,6 +92,13 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
     private var pendingCompletion: ((RewardedAdOutcome) -> Void)?
     private var session = RewardedAdSession()
 
+    var isRewardedAdReady: Bool {
+        consentGate.state == .allowed
+            && rewardedAd != nil
+            && pendingCompletion == nil
+            && !isPresenting
+    }
+
     convenience init(rewardedAdUnitID: String) {
         self.init(rewardedAdUnitID: rewardedAdUnitID,
                   consentProvider: GoogleMobileAdsConsentProvider())
@@ -125,6 +132,39 @@ final class GoogleMobileAdsProvider: NSObject, AdProvider, FullScreenContentDele
             presentOrLoad()
         case .denied:
             completePending(.unavailable(.consentBlocked))
+        }
+    }
+
+    /// Result／Replay Gate専用のready-only経路。
+    /// Consentやloadの完了を待たず、今この瞬間に提示できなければ即時に返す。
+    func showRewardedAdIfReady(completion: @escaping (RewardedAdOutcome) -> Void) {
+        guard pendingCompletion == nil, !isPresenting else {
+            completion(.unavailable(.busy))
+            return
+        }
+
+        switch consentGate.state {
+        case .notStarted:
+            // UMPは開始するが、Gate側は完了を待たない。
+            start()
+            if consentGate.state == .denied {
+                completion(.unavailable(.consentBlocked))
+            } else {
+                completion(.unavailable(.notLoaded))
+            }
+        case .gathering:
+            completion(.unavailable(.notLoaded))
+        case .denied:
+            completion(.unavailable(.consentBlocked))
+        case .allowed:
+            guard let rewardedAd else {
+                completion(.unavailable(.notLoaded))
+                // 次回のためのpreloadは継続するが、今回のcompletionは保持しない。
+                loadIfNeeded()
+                return
+            }
+            pendingCompletion = completion
+            present(rewardedAd)
         }
     }
 

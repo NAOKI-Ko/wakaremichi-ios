@@ -14,7 +14,7 @@ Latest reviewed implementation/config commit:
 State Snapshot:
 `bfcd2a8c45d39ea0ac935696474fec144e67f700`
 
-Review target: Result Rewarded Ads + Replay implementation commit produced by this work unit
+Review target: Result Rewarded Ads + Replay review-fix commit produced by this work unit
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -27,7 +27,7 @@ Current work unit: Result Rewarded Ads + Replay
 
 Current work unit review status: NOT REVIEWED
 
-Current work unit implementation status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit implementation status: REVIEW FIX IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -53,10 +53,13 @@ Continuity: Ready
 - Memory-only replay using the official DailyRun date and seed
 - Replay persistence boundary protecting DailyRun, streak, collectibles, and first diagnosis
 - Exactly-once result/replay transitions
+- Ready-only Result/Replay ad presentation with immediate unavailable outcomes
+- Result fail-open while consent is gathering or ads cannot be requested
+- Existing Continue/Restart load-waiting behavior preserved
 
 Latest validation:
 
-- Unit Tests: 63 PASS (existing 53 plus 10 focused tests)
+- Unit Tests: 68 PASS (existing 63 plus 5 review-fix tests)
 - Debug Build: PASS
 - Release Generic iOS Device Build: PASS
 - First Visual QA: PASS at 320x568pt for Result Gate and ResultView replay action
@@ -91,7 +94,7 @@ Integrated and APPROVED
 
 # Release Blockers
 
-- Result Rewarded Ads + Replay exact-SHA review is pending.
+- Result Rewarded Ads + Replay review-fix exact-SHA review is pending.
 - Apple Developer Bundle ID alignment has not been verified.
 - App Store Connect Bundle ID alignment has not been verified.
 - AdMob Bundle ID alignment has not been verified.
@@ -100,13 +103,13 @@ Integrated and APPROVED
 
 # Next Work Unit
 
-Result Rewarded Ads + Replay Review Gate
+Result Rewarded Ads + Replay Review Fix Gate
 
 Status: READY FOR REVIEW
 
 Specification: `docs/RESULT_REWARDED_ADS_REPLAY_SPEC.md`
 
-1. Review the exact implementation commit produced by this work unit.
+1. Review the exact review-fix commit produced by this work unit.
 2. Confirm Google official test-ad presentation, reward, cancellation, and dismissal reload when the network environment permits.
 3. Verify the Replay start and Replay result flow on a physical device.
 
