@@ -63,7 +63,9 @@ final class MazeScene: SKScene {
         self.todaysEvent = event
         let viewport = CGFloat(Tuning.viewportTiles) * MazeScene.tile
         super.init(size: CGSize(width: viewport, height: viewport))
-        scaleMode = .aspectFit
+        // SpriteViewの縦長領域へ追従し、正方形シーンの上下に余白を作らない。
+        // タイルやカメラのゲームロジックは変えず、表示領域だけを埋める。
+        scaleMode = .resizeFill
         backgroundColor = Palette.background
     }
 

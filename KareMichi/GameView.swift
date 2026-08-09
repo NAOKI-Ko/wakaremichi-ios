@@ -745,18 +745,14 @@ struct MazePlayView: View {
                 }
                 .accessibilityIdentifier("finishEarlyButton")
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 6)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 14)
+            .padding(.top, 2)
+            .padding(.bottom, 4)
 
-            Image("DividerOrnament")
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 10)
-                .clipped()
-                .padding(.horizontal, 24)
-                .opacity(0.8)
+            Rectangle()
+                .fill(Palette.lampSUI.opacity(0.12))
+                .frame(height: 1)
+                .padding(.horizontal, 14)
 
             if let warning {
                 Text(warning)
@@ -769,8 +765,8 @@ struct MazePlayView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            // SKScene自身がscaleMode = .aspectFitを持つため、SwiftUI側では
-            // 正方形制約を重ねず、上部バーとHUDの間をそのまま使う。
+            // SKSceneは表示領域へ追従するため、SwiftUI側では正方形制約を重ねず、
+            // 上部バーとHUDの間をすべて迷路へ渡す。
             SpriteView(scene: scene, options: [.ignoresSiblingOrder])
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
@@ -791,20 +787,14 @@ struct MazePlayView: View {
                 )
 
             // --- 下部HUD: 旅人・体力・ミニマップ ---
-            Image("DividerOrnament")
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity)
-                .frame(height: 10)
-                .clipped()
-                .padding(.horizontal, 24)
-                .padding(.vertical, 6)
+            Rectangle()
+                .fill(Palette.lampSUI.opacity(0.12))
+                .frame(height: 1)
                 .background(Palette.surfaceSUI)
-                .opacity(0.9)
 
             ExplorationHUD(hud: hud)
                 .frame(maxWidth: .infinity)
-                .frame(height: 158)
+                .frame(height: 112)
                 .background(Palette.surfaceSUI)
                 .accessibilityIdentifier("explorationHUD")
         }
@@ -818,36 +808,34 @@ struct ExplorationHUD: View {
     let hud: HUDSnapshot?
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 10) {
             if let hud {
                 ZStack {
-                    RadialGradient(colors: [Palette.lampSUI.opacity(0.28), .clear],
-                                   center: .center, startRadius: 4, endRadius: 60)
-                        .frame(width: 108, height: 108)
+                    RadialGradient(colors: [Palette.lampSUI.opacity(0.20), .clear],
+                                   center: .center, startRadius: 4, endRadius: 46)
+                        .frame(width: 82, height: 82)
                     Image(hud.traveler.imageName)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 96, height: 96)
+                        .frame(width: 74, height: 74)
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(hud.traveler.displayName)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12, weight: .medium))
                         .kerning(1)
                         .foregroundStyle(Palette.lampSUI.opacity(0.85))
-                    StaminaGauge(remaining: hud.stamina, max: hud.staminaMax)
-                    Spacer(minLength: 0)
+                    StaminaGauge(remaining: hud.stamina, maximum: hud.staminaMax)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                MinimapView(hud: hud, size: 128)
+                MinimapView(hud: hud, size: 90)
             } else {
                 Spacer()
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .background(hudTexture)
         .accessibilityElement(children: .contain)
     }
@@ -870,48 +858,25 @@ struct ExplorationHUD: View {
 struct StaminaGauge: View {
 
     let remaining: Int
-    let max: Int
+    let maximum: Int
 
     private var ratio: CGFloat {
-        guard max > 0 else { return 0 }
-        return CGFloat(remaining) / CGFloat(max)
+        guard maximum > 0 else { return 0 }
+        return CGFloat(remaining) / CGFloat(maximum)
     }
 
-    // 素材(1536x1024)を計測して求めた「窓」の位置(枠画像全体に対する比率)。
-    private let windowXInset: CGFloat = 0.140
-    private let windowYInset: CGFloat = 0.382
-    private let windowHeightRatio: CGFloat = 0.203
-
-    // GeometryReaderへ横幅いっぱいを渡すと、1536:1024の枠が横長に変形して
-    // 隣のタイトルやミニマップへ重なる。高さを固定し、素材比率から幅を決める。
-    private static let frameHeight: CGFloat = 46
-    private static let frameWidth: CGFloat = frameHeight * 1536.0 / 1024.0
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ZStack(alignment: .leading) {
-                Image("StaminaFrame")
-                    .resizable()
-                    .frame(width: Self.frameWidth, height: Self.frameHeight)
+        VStack(alignment: .leading, spacing: 5) {
+            Text("のこり \(remaining)歩")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.68))
 
-                let windowWidth = Self.frameWidth * (1 - windowXInset * 2)
-                let windowHeight = Self.frameHeight * windowHeightRatio * 0.6
-
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.black.opacity(0.35))
-                    Capsule()
-                        .fill(ratio < 0.2 ? Color.red.opacity(0.75) : Palette.lampSUI.opacity(0.9))
-                        .frame(width: windowWidth * Swift.max(0, Swift.min(1, ratio)))
-                }
-                .frame(width: windowWidth, height: windowHeight)
-                .position(x: Self.frameWidth * (windowXInset + (1 - windowXInset * 2) / 2),
-                          y: Self.frameHeight * (windowYInset + windowHeightRatio / 2))
-            }
-            .frame(width: Self.frameWidth, height: Self.frameHeight)
-
-            Text("のこり \(remaining) 歩")
-                .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.45))
+            ProgressView(value: Double(Swift.max(0, Swift.min(remaining, maximum))),
+                         total: Double(Swift.max(maximum, 1)))
+                .progressViewStyle(.linear)
+                .tint(ratio < 0.2 ? Color.red.opacity(0.72) : Palette.lampSUI.opacity(0.78))
+                .frame(maxWidth: 120)
+                .scaleEffect(y: 0.65)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("体力")
@@ -927,28 +892,16 @@ struct StaminaGauge: View {
 struct MinimapView: View {
 
     let hud: HUDSnapshot
-    var size: CGFloat = 128
-
-    // 素材(1024x1024)の中央窓だけへ、探索済みマスのCanvasを収める。
-    private let windowXInset: CGFloat = 242.0 / 1024.0
-    private let windowYInset: CGFloat = 264.0 / 1024.0
-    private let windowWidthRatio: CGFloat = (778.0 - 242.0) / 1024.0
-    private let windowHeightRatio: CGFloat = (754.0 - 264.0) / 1024.0
+    var size: CGFloat = 90
 
     var body: some View {
-        ZStack {
-            minimapCanvas
-                .frame(width: size * windowWidthRatio,
-                       height: size * windowHeightRatio)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .position(x: size * (windowXInset + windowWidthRatio / 2),
-                          y: size * (windowYInset + windowHeightRatio / 2))
-
-            Image("MinimapFrame")
-                .resizable()
-                .frame(width: size, height: size)
-        }
+        minimapCanvas
         .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .overlay {
+            RoundedRectangle(cornerRadius: 7)
+                .stroke(.white.opacity(0.08), lineWidth: 1)
+        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("ミニマップ")
         .accessibilityIdentifier("minimap")
