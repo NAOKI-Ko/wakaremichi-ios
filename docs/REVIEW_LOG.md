@@ -59,3 +59,40 @@ Notes:
 - Test Bundle ID: `com.naoki.wakaremichi.tests`
 - External Apple Developer, App Store Connect, and AdMob dashboards are not yet verified.
 - The next work unit is App Icon Integration.
+
+## 2026-08-10 — App Icon Final Review Receipt
+
+Implementation/Config Commit:
+`e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
+
+Commit:
+`chore: integrate production app icon`
+
+Decision: PASS / APPROVED
+
+- ChatGPT exact SHA Review: PASS
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- Home Screen Visual QA: PASS
+- `origin/main` exact SHA: confirmed
+- Working tree clean: confirmed
+
+Reviewed scope:
+
+- `KareMichi.xcodeproj/project.pbxproj`
+- `KareMichi/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`
+- `KareMichi/Assets.xcassets/AppIcon.appiconset/Contents.json`
+- `docs/PROJECT_STATE.md`
+
+App Icon validation:
+
+- 1024x1024 PNG
+- Opaque, with no alpha channel
+- No white margin or baked/double-rounded corners
+- No unintended crop
+- Traveler and lantern readability confirmed at small size
+
+Notes:
+
+- The App Icon integration blocker is resolved.
+- The next work unit is Result Rewarded Ads + Replay.

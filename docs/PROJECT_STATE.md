@@ -9,10 +9,10 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`04d24a8b885543202b29d9ebb78e6e0ea9263cfb`
+`e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
 
 State Snapshot:
-`c252754adddf6909e6eb86557c5a42e0325a00f6`
+`e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
 
 Review target: none
 
@@ -23,9 +23,9 @@ Latest reviewed implementation/config status: APPROVED
 - Debug Build: PASS
 - Release Generic iOS Device Build: PASS (`CODE_SIGNING_ALLOWED=NO`)
 
-Current work unit: App Icon Integration
+Current work unit: Result Rewarded Ads + Replay
 
-Current work unit review status: NOT REVIEWED
+Current work unit review status: SPEC READY / IMPLEMENTATION NOT STARTED
 
 Continuity: Ready
 
@@ -40,6 +40,7 @@ Continuity: Ready
 - SKAdNetwork official list
 - Exploration UI polish
 - Footstep volume restoration
+- Production App Icon integration
 
 Latest validation:
 
@@ -65,27 +66,40 @@ Branch: `main`
 
 # App Icon
 
-Integrated locally / review pending
+Integrated and APPROVED
+
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- Home Screen Visual QA: PASS
+- Source: 1024x1024 PNG, opaque, no alpha
+- No white margin, double-rounded corners, or unintended crop
+- Traveler and lantern readability confirmed at small size
 
 # Release Blockers
 
-- Apple Developer, App Store Connect, and AdMob Bundle ID alignment has not been verified.
+- Result Rewarded Ads + Replay implementation is not started.
+- Apple Developer Bundle ID alignment has not been verified.
+- App Store Connect Bundle ID alignment has not been verified.
+- AdMob Bundle ID alignment has not been verified.
 - A signed Archive and validation have not been performed.
 - App Store Connect submission information is incomplete.
 
 # Next Work Unit
 
-App Icon Integration Review
+Result Rewarded Ads + Replay
 
-1. Review the integrated App Icon and complete Visual QA.
-2. Align the Apple App ID and App Store Connect record with `com.naoki.wakaremichi`.
-3. Confirm AdMob app registration alignment with `com.naoki.wakaremichi`.
-4. Create and validate a signed Release archive.
-5. Complete App Store Connect submission information.
+Status: SPEC READY / IMPLEMENTATION NOT STARTED
+
+Specification: `docs/RESULT_REWARDED_ADS_REPLAY_SPEC.md`
+
+1. Add the rewarded Result Gate without permanently blocking result access.
+2. Add explicit rewarded replay from the result screen using the same daily seed.
+3. Keep replay transient and separate from the official DailyRun, streak, collectibles, and first diagnosis.
+4. Reuse the existing rewarded provider, test/production IDs, and UMP consent gate.
 
 # Do Not Start
 
-- New game features
+- New game features outside the approved Result Rewarded Ads + Replay work unit
 - Banner ads
 - Interstitial ads
 - App Open ads
