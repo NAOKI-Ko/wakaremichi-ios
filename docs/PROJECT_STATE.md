@@ -11,6 +11,9 @@ v1.0 Release Candidate
 Latest reviewed implementation/config commit:
 `04d24a8b885543202b29d9ebb78e6e0ea9263cfb`
 
+State Snapshot:
+`c252754adddf6909e6eb86557c5a42e0325a00f6`
+
 Review target: none
 
 Latest reviewed implementation/config status: APPROVED
@@ -20,9 +23,9 @@ Latest reviewed implementation/config status: APPROVED
 - Debug Build: PASS
 - Release Generic iOS Device Build: PASS (`CODE_SIGNING_ALLOWED=NO`)
 
-Current work unit: Release Identity
+Current work unit: App Icon Integration
 
-Current work unit review status: APPROVED
+Current work unit review status: NOT REVIEWED
 
 Continuity: Ready
 
@@ -60,18 +63,21 @@ Branch: `main`
 - Bundle ID blocker: resolved
 - External Apple Developer, App Store Connect, and AdMob dashboard status: not changed or verified by this work unit
 
+# App Icon
+
+Integrated locally / review pending
+
 # Release Blockers
 
-- App Icon integration in the Xcode project is incomplete.
 - Apple Developer, App Store Connect, and AdMob Bundle ID alignment has not been verified.
 - A signed Archive and validation have not been performed.
 - App Store Connect submission information is incomplete.
 
 # Next Work Unit
 
-App Icon Integration
+App Icon Integration Review
 
-1. Integrate the App Icon.
+1. Review the integrated App Icon and complete Visual QA.
 2. Align the Apple App ID and App Store Connect record with `com.naoki.wakaremichi`.
 3. Confirm AdMob app registration alignment with `com.naoki.wakaremichi`.
 4. Create and validate a signed Release archive.
