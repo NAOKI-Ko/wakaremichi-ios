@@ -638,15 +638,88 @@ final class MazeGameTests: XCTestCase {
         XCTAssertEqual(axes.personalityCode, "FECI")
     }
 
+    @MainActor
     func testMockRewardedAdCompletesSuccessfully() {
         let completed = expectation(description: "mock rewarded ad")
-        let startedAt = Date()
-        MockAdProvider().showRewardedAd { success in
+        MockAdProvider(delay: 0).showRewardedAd { success in
             XCTAssertTrue(success)
-            XCTAssertGreaterThanOrEqual(Date().timeIntervalSince(startedAt), 0.9)
             completed.fulfill()
         }
         wait(for: [completed], timeout: 2)
+    }
+
+    @MainActor
+    func testAdProvidersFailSafelyWithoutReward() {
+        let mockFailure = expectation(description: "mock failure")
+        MockAdProvider(result: false, delay: 0).showRewardedAd { success in
+            XCTAssertFalse(success)
+            mockFailure.fulfill()
+        }
+
+        let unavailable = expectation(description: "unavailable")
+        UnavailableAdProvider().showRewardedAd { success in
+            XCTAssertFalse(success)
+            unavailable.fulfill()
+        }
+        wait(for: [mockFailure, unavailable], timeout: 2)
+    }
+
+    func testRewardedAdSessionPreventsDoubleRewardAndDoubleCompletion() {
+        var rewarded = RewardedAdSession()
+        XCTAssertTrue(rewarded.recordReward())
+        XCTAssertFalse(rewarded.recordReward())
+        XCTAssertEqual(rewarded.finish(), true)
+        XCTAssertNil(rewarded.finish())
+
+        var dismissedWithoutReward = RewardedAdSession()
+        XCTAssertEqual(dismissedWithoutReward.finish(), false)
+        XCTAssertFalse(dismissedWithoutReward.recordReward())
+    }
+
+    func testAdConsentGateStartsOnceAndRequiresPermission() {
+        var allowed = AdConsentGate()
+        XCTAssertEqual(allowed.state, .notStarted)
+        XCTAssertTrue(allowed.begin())
+        XCTAssertFalse(allowed.begin())
+        XCTAssertEqual(allowed.state, .gathering)
+        XCTAssertEqual(allowed.finish(canRequestAds: true), true)
+        XCTAssertEqual(allowed.state, .allowed)
+        XCTAssertNil(allowed.finish(canRequestAds: false))
+
+        var denied = AdConsentGate()
+        XCTAssertTrue(denied.begin())
+        XCTAssertEqual(denied.finish(canRequestAds: false), false)
+        XCTAssertEqual(denied.state, .denied)
+    }
+
+    @MainActor
+    func testGoogleProviderFailsSafelyWhenConsentDoesNotPermitAds() {
+        let consent = StubAdConsentProvider(canRequestAds: false)
+        let provider = GoogleMobileAdsProvider(
+            rewardedAdUnitID: "ca-app-pub-3940256099942544/1712485313",
+            consentProvider: consent
+        )
+
+        provider.start()
+        provider.start()
+        XCTAssertEqual(consent.requestCount, 1)
+
+        let completed = expectation(description: "consent denied")
+        provider.showRewardedAd { success in
+            XCTAssertFalse(success)
+            completed.fulfill()
+        }
+        wait(for: [completed], timeout: 1)
+    }
+
+    @MainActor
+    func testUnitTestsStayOnMockAndDebugUsesOfficialTestAdUnitID() {
+        XCTAssertTrue(Ads.provider is MockAdProvider)
+        XCTAssertTrue(Ads.makeDefaultProvider(isRunningUnitTests: true) is MockAdProvider)
+        XCTAssertTrue(Ads.makeDefaultProvider(isRunningUnitTests: false)
+            is GoogleMobileAdsProvider)
+        XCTAssertEqual(AdConfiguration.rewardedAdUnitID(),
+                       "ca-app-pub-3940256099942544/1712485313")
     }
 
     @MainActor
@@ -1176,6 +1249,21 @@ final class MazeGameTests: XCTestCase {
         case .exploration: axes.exploration = value
         case .caution: axes.caution = value
         case .flexibility: axes.flexibility = value
+        }
+    }
+
+    @MainActor
+    private final class StubAdConsentProvider: AdConsentProviding {
+        let canRequestAds: Bool
+        private(set) var requestCount = 0
+
+        init(canRequestAds: Bool) {
+            self.canRequestAds = canRequestAds
+        }
+
+        func requestConsent(completion: @escaping (Bool) -> Void) {
+            requestCount += 1
+            completion(canRequestAds)
         }
     }
 }

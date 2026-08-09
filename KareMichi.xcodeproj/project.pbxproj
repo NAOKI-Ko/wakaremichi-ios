@@ -28,6 +28,8 @@
 		C00000000000000000000019 /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000019 /* CollectionView.swift */; };
 		C0000000000000000000001A /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001A /* ShareCardView.swift */; };
 		C0000000000000000000001B /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* StoreManager.swift */; };
+		C0000000000000000000001C /* GoogleMobileAdsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001D /* GoogleMobileAdsProvider.swift */; };
+		C0000000000000000000001D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = M00000000000000000000001 /* GoogleMobileAds */; };
 		C00000000000000000000020 /* ambient_wind_loop20s.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000020 /* ambient_wind_loop20s.wav */; };
 		C00000000000000000000021 /* bgm_musicbox_v4.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000021 /* bgm_musicbox_v4.wav */; };
 		C00000000000000000000022 /* sfx_bump.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000022 /* sfx_bump.wav */; };
@@ -75,6 +77,8 @@
 		A0000000000000000000001A /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		A0000000000000000000001B /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		A0000000000000000000001C /* SPEC_diagnosis_v2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SPEC_diagnosis_v2.md; sourceTree = "<group>"; };
+		A0000000000000000000001D /* GoogleMobileAdsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMobileAdsProvider.swift; sourceTree = "<group>"; };
+		A0000000000000000000001E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A00000000000000000000020 /* ambient_wind_loop20s.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ambient_wind_loop20s.wav; sourceTree = "<group>"; };
 		A00000000000000000000021 /* bgm_musicbox_v4.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bgm_musicbox_v4.wav; sourceTree = "<group>"; };
 		A00000000000000000000022 /* sfx_bump.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_bump.wav; sourceTree = "<group>"; };
@@ -96,6 +100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0000000000000000000001D /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,11 +150,13 @@
 				A00000000000000000000015 /* GameAudio.swift */,
 				A00000000000000000000016 /* HUDSnapshot.swift */,
 				A00000000000000000000017 /* AdProvider.swift */,
+				A0000000000000000000001D /* GoogleMobileAdsProvider.swift */,
 				A00000000000000000000018 /* RandomEvents.swift */,
 				A00000000000000000000019 /* CollectionView.swift */,
 				A0000000000000000000001A /* ShareCardView.swift */,
 				A0000000000000000000001B /* StoreManager.swift */,
 				A0000000000000000000001C /* SPEC_diagnosis_v2.md */,
+				A0000000000000000000001E /* Info.plist */,
 				D00000000000000000000005 /* Audio */,
 				A00000000000000000000010 /* Assets.xcassets */,
 			);
@@ -199,6 +206,9 @@
 			dependencies = (
 			);
 			name = KareMichi;
+			packageProductDependencies = (
+				M00000000000000000000001 /* GoogleMobileAds */,
+			);
 			productName = KareMichi;
 			productReference = B00000000000000000000001 /* KareMichi.app */;
 			productType = "com.apple.product-type.application";
@@ -249,6 +259,9 @@
 				Base,
 			);
 			mainGroup = D00000000000000000000001;
+			packageReferences = (
+				L00000000000000000000001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = D00000000000000000000002 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -313,6 +326,7 @@
 				C00000000000000000000019 /* CollectionView.swift in Sources */,
 				C0000000000000000000001A /* ShareCardView.swift in Sources */,
 				C0000000000000000000001B /* StoreManager.swift in Sources */,
+				C0000000000000000000001C /* GoogleMobileAdsProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,6 +347,25 @@
 			targetProxy = J00000000000000000000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		L00000000000000000000001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		M00000000000000000000001 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = L00000000000000000000001 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		H00000000000000000000001 /* Debug */ = {
@@ -372,10 +405,13 @@
 		H00000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ADMOB_APP_ID = "ca-app-pub-6219093469517477~7284143930";
+				ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/1712485313";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 67BCCSD863;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KareMichi/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "まいにちの分かれ道";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -396,10 +432,13 @@
 		H00000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ADMOB_APP_ID = "ca-app-pub-6219093469517477~7284143930";
+				ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-6219093469517477/2031817259";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 67BCCSD863;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = KareMichi/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "まいにちの分かれ道";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

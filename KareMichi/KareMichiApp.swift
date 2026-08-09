@@ -3,6 +3,10 @@ import SwiftData
 
 @main
 struct KareMichiApp: App {
+    init() {
+        Ads.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
