@@ -1037,14 +1037,63 @@ final class MazeGameTests: XCTestCase {
     @MainActor
     func testShareImageRendersAtRetinaResolution() throws {
         var log = RunLog()
-        log.path = [Coord(x: 1, y: 1), Coord(x: 2, y: 1), Coord(x: 2, y: 2)]
+        log.reachedGoal = true
+        log.steps = 84
+        log.exploredCellCount = 72
+        log.openCellCount = 100
+        log.chestOpened = true
         let archetype = Diagnosis.archetype(for: .neutral)
-        let image = try XCTUnwrap(ShareImageRenderer.render(log: log,
-                                                           archetype: archetype,
-                                                           traveler: .wanderer,
-                                                           date: Date()))
+        let keepsake = Keepsake.earned(seed: 20_260_809, reachedGoal: true)
+        let content = ShareCardContent(log: log,
+                                       archetype: archetype,
+                                       traveler: .wanderer,
+                                       date: Date(timeIntervalSince1970: 1_775_000_000),
+                                       currentStreak: 7,
+                                       keepsake: keepsake)
+        let image = try XCTUnwrap(ShareImageRenderer.render(content: content))
         XCTAssertEqual(image.size.width * image.scale, 1_920, accuracy: 1)
         XCTAssertEqual(image.size.height * image.scale, 2_400, accuracy: 1)
+        XCTAssertEqual(content.currentStreak, 7)
+        XCTAssertEqual(content.keepsakeName, keepsake?.name)
+        XCTAssertEqual(content.explorationPercent, 72)
+        XCTAssertEqual(content.chestCount, 1)
+    }
+
+    func testShareContentIsStableAndEarlyExitOmitsGoalOnlyValues() {
+        var cleared = RunLog()
+        cleared.reachedGoal = true
+        cleared.steps = 51
+        cleared.exploredCellCount = 35
+        cleared.openCellCount = 50
+        let archetype = Diagnosis.archetype(for: .neutral)
+        let date = Date(timeIntervalSince1970: 1_775_000_000)
+        let keepsake = Keepsake.earned(seed: 20_260_809, reachedGoal: true)
+
+        let first = ShareCardContent(log: cleared,
+                                     archetype: archetype,
+                                     traveler: .owl,
+                                     date: date,
+                                     currentStreak: 3,
+                                     keepsake: keepsake)
+        let restoredEquivalent = ShareCardContent(log: cleared,
+                                                  archetype: archetype,
+                                                  traveler: .owl,
+                                                  date: date,
+                                                  currentStreak: 3,
+                                                  keepsake: keepsake)
+        XCTAssertEqual(first, restoredEquivalent)
+
+        var earlyExit = cleared
+        earlyExit.reachedGoal = false
+        let early = ShareCardContent(log: earlyExit,
+                                     archetype: archetype,
+                                     traveler: .owl,
+                                     date: date,
+                                     currentStreak: 3,
+                                     keepsake: keepsake)
+        XCTAssertEqual(early.currentStreak, 0)
+        XCTAssertNil(early.keepsakeName)
+        XCTAssertFalse(early.reachedGoal)
     }
 
     private func mazeSnapshot(_ maze: Maze) -> String {

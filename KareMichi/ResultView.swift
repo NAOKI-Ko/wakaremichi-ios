@@ -147,6 +147,15 @@ struct ResultView: View {
         Keepsake.earned(seed: seed, reachedGoal: log.reachedGoal)
     }
 
+    private var shareContent: ShareCardContent {
+        ShareCardContent(log: log,
+                         archetype: archetype,
+                         traveler: traveler,
+                         date: resultDate,
+                         currentStreak: currentStreak,
+                         keepsake: keepsake)
+    }
+
     var body: some View {
         ZStack {
             Palette.backgroundSUI.ignoresSafeArea()
@@ -311,17 +320,14 @@ struct ResultView: View {
     private var shareButton: some View {
         Button {
             GameAudio.shared.play(.uiTap)
-            shareImage = ShareImageRenderer.render(log: log,
-                                                    archetype: archetype,
-                                                    traveler: traveler,
-                                                    date: resultDate)
+            shareImage = ShareImageRenderer.render(content: shareContent)
             isSharePresented = shareImage != nil
         } label: {
-            Label("軌跡を書き出す", systemImage: "square.and.arrow.up")
+            Label("共有", systemImage: "square.and.arrow.up")
                 .font(.system(size: 12))
                 .foregroundStyle(.white.opacity(0.55))
         }
-        .accessibilityIdentifier("shareTrailButton")
+        .accessibilityIdentifier("shareResultButton")
         .padding(.top, 2)
         .sheet(isPresented: $isSharePresented) {
             if let shareImage {

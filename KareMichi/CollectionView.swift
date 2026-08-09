@@ -56,8 +56,21 @@ struct CollectionView: View {
             }
         }
         .sheet(item: $selected) { run in
-            CollectionDetailView(run: run) { selected = nil }
+            CollectionDetailView(run: run,
+                                 currentStreak: streak(on: run)) {
+                selected = nil
+            }
         }
+    }
+
+    /// 過去の結果から共有するときも、Cycle 1と同じ算出器で当時の連続日数を復元する。
+    private func streak(on run: DailyRun) -> Int {
+        let runDay = DailySeed.startOfDay(for: run.date)
+        let historyThroughRun = allRuns.filter {
+            DailySeed.startOfDay(for: $0.date) <= runDay
+        }
+        return PlayStreakCalculator.summary(runs: historyThroughRun,
+                                            asOf: run.date).currentStreak
     }
 
     private var header: some View {
@@ -261,6 +274,7 @@ struct CollectionThumbnail: View {
 struct CollectionDetailView: View {
 
     let run: DailyRun
+    let currentStreak: Int
     let onClose: () -> Void
 
     var body: some View {
@@ -271,7 +285,7 @@ struct CollectionDetailView: View {
                   seed: UInt64(max(run.seed, 0)),
                   recentAxes: [],
                   totalDayCount: 0,
-                  currentStreak: 0,
+                  currentStreak: currentStreak,
                   resultDate: run.date,
                   alreadyPlayed: true,
                   onClose: onClose)
