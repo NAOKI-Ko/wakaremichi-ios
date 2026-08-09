@@ -10,6 +10,13 @@ Wakaremichi / まいにちの分かれ道
 
 Default branch: `main`
 
+## Source of Truth
+
+Product decisions and progress are managed in Notion.
+
+- Control Plane: <https://app.notion.com/p/3af8c2d3ffd0811b98cffa4e495ebc79>
+- Pipeline: <https://app.notion.com/p/3aa8c2d3ffd08160b18de2af54cc7bcd>
+
 ## Read order
 
 1. `docs/PROJECT_STATE.md`

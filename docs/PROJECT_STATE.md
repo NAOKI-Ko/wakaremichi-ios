@@ -13,11 +13,15 @@ Latest reviewed implementation commit:
 
 Review target: none
 
-Review status: APPROVED
+Latest reviewed implementation status: APPROVED
 
 - Code review: PASS
 - Visual QA: PASS
 - Audio QA: PASS
+
+Current work unit: Release Identity
+
+Current work unit review status: NOT REVIEWED
 
 # Completed
 
@@ -45,23 +49,28 @@ Visibility: Public (intentional)
 
 Branch: `main`
 
+# Local Release Identity
+
+- Production Bundle Identifier: `com.naoki.wakaremichi`
+- Test Bundle Identifier: `com.naoki.wakaremichi.tests`
+- Local Xcode identity status: configured
+- External Apple Developer, App Store Connect, and AdMob dashboard status: not changed or verified by this work unit
+
 # Release Blockers
 
-- The current Bundle Identifier is `com.example.KareMichi`.
-- The production Bundle Identifier is not yet finalized or applied.
 - App Icon integration in the Xcode project is incomplete.
 - A signed Archive and validation have not been performed.
 - App Store Connect submission information is incomplete.
 
 # Next Work Unit
 
-Release Identity
+App Icon and signed release validation
 
-1. Finalize the production Bundle Identifier.
-2. Align the Apple App ID and App Store Connect record.
-3. Confirm AdMob Bundle ID alignment.
-4. Integrate the App Icon.
-5. Verify the Release build.
+1. Integrate the App Icon.
+2. Align the Apple App ID and App Store Connect record with `com.naoki.wakaremichi`.
+3. Confirm AdMob app registration alignment with `com.naoki.wakaremichi`.
+4. Create and validate a signed Release archive.
+5. Complete App Store Connect submission information.
 
 # Do Not Start
 
