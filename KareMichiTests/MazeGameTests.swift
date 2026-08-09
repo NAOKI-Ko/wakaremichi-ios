@@ -53,6 +53,87 @@ final class MazeGameTests: XCTestCase {
         XCTAssertEqual(DailySeed.seed(for: instant, calendar: losAngeles), 20_260_728)
     }
 
+    func testKeepsakeRequiresGoalAndIsDeterministicForTheSameDay() {
+        let seed: UInt64 = 20_260_809
+
+        XCTAssertNil(Keepsake.earned(seed: seed, reachedGoal: false))
+        let first = Keepsake.earned(seed: seed, reachedGoal: true)
+        let sameDayAgain = Keepsake.earned(seed: seed, reachedGoal: true)
+
+        XCTAssertNotNil(first)
+        XCTAssertEqual(first, sameDayAgain)
+    }
+
+    func testKeepsakeCanBeDeterministicallyDrawnForDifferentDays() {
+        let seeds = (1...16).map { 20_260_800 + UInt64($0) }
+        let firstPass = seeds.compactMap {
+            Keepsake.earned(seed: $0, reachedGoal: true)
+        }
+        let secondPass = seeds.compactMap {
+            Keepsake.earned(seed: $0, reachedGoal: true)
+        }
+
+        XCTAssertEqual(firstPass, secondPass)
+        XCTAssertEqual(firstPass.count, seeds.count)
+        XCTAssertGreaterThan(Set(firstPass).count, 1)
+    }
+
+    func testKeepsakeRestoresFromDailyRunWithoutAStoredField() {
+        var log = RunLog()
+        log.reachedGoal = true
+        let firstRun = DailyRun(date: Date(timeIntervalSince1970: 1_775_000_000),
+                                seed: 20_260_809,
+                                log: log,
+                                axes: .neutral,
+                                traveler: .wanderer,
+                                moodBefore: nil,
+                                fogFeedback: nil)
+        let restoredEquivalent = DailyRun(date: firstRun.date,
+                                          seed: firstRun.seed,
+                                          log: log,
+                                          axes: .neutral,
+                                          traveler: .wanderer,
+                                          moodBefore: nil,
+                                          fogFeedback: nil)
+
+        XCTAssertNotNil(firstRun.keepsake)
+        XCTAssertEqual(firstRun.keepsake, restoredEquivalent.keepsake)
+    }
+
+    func testKeepsakeCollectionDistinguishesAcquiredAndIgnoresSameDayDuplicates() {
+        var clearedLog = RunLog()
+        clearedLog.reachedGoal = true
+        let date = Date(timeIntervalSince1970: 1_775_000_000)
+        let firstRun = DailyRun(date: date,
+                                seed: 20_260_809,
+                                log: clearedLog,
+                                axes: .neutral,
+                                traveler: .wanderer,
+                                moodBefore: nil,
+                                fogFeedback: nil)
+        let duplicate = DailyRun(date: date,
+                                 seed: 20_260_809,
+                                 log: clearedLog,
+                                 axes: .neutral,
+                                 traveler: .wanderer,
+                                 moodBefore: nil,
+                                 fogFeedback: nil)
+        let earlyExit = DailyRun(date: date.addingTimeInterval(86_400),
+                                 seed: 20_260_810,
+                                 log: RunLog(),
+                                 axes: .neutral,
+                                 traveler: .wanderer,
+                                 moodBefore: nil,
+                                 fogFeedback: nil)
+
+        let acquired = Keepsake.acquired(from: [firstRun, duplicate, earlyExit])
+        XCTAssertEqual(acquired.count, 1)
+        XCTAssertEqual(acquired.first, firstRun.keepsake)
+        XCTAssertEqual(Keepsake.v1Catalog.count, 8)
+        XCTAssertEqual(Keepsake.v1Catalog.filter(acquired.contains).count, 1)
+        XCTAssertEqual(Keepsake.v1Catalog.filter { !acquired.contains($0) }.count, 7)
+    }
+
     func testPlayStreakCountsFirstCompletionAndIgnoresSameDayDuplicates() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))

@@ -12,6 +12,11 @@ struct CollectionView: View {
     @State private var selected: DailyRun?
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+    private let keepsakeColumns = [GridItem(.flexible()), GridItem(.flexible())]
+
+    private var acquiredKeepsakes: Set<Keepsake> {
+        Keepsake.acquired(from: allRuns)
+    }
 
     /// 買い切り前は直近7件だけ見せる。「全部の旅の記録」を買い切りで解除する。
     private var visibleRuns: [DailyRun] {
@@ -33,9 +38,14 @@ struct CollectionView: View {
                 header
 
                 if allRuns.isEmpty {
-                    emptyState
+                    ScrollView {
+                        keepsakeShelf
+                        emptyState
+                            .frame(minHeight: 240)
+                    }
                 } else {
                     ScrollView {
+                        keepsakeShelf
                         summaryRow
                         grid
                         if hasLockedRuns {
@@ -100,6 +110,55 @@ struct CollectionView: View {
             summaryStat("出会った日", "\(allRuns.filter { $0.eventTheme != nil }.count)")
         }
         .padding(.vertical, 16)
+    }
+
+    private var keepsakeShelf: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("持ち帰ったもの")
+                    .font(.system(size: 13, weight: .medium))
+                    .kerning(1)
+                    .foregroundStyle(Palette.lampSUI.opacity(0.75))
+                Spacer()
+                Text("\(acquiredKeepsakes.count) / \(Keepsake.v1Catalog.count)")
+                    .font(.system(size: 10, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.35))
+            }
+
+            LazyVGrid(columns: keepsakeColumns, spacing: 8) {
+                ForEach(Keepsake.v1Catalog) { keepsake in
+                    let isAcquired = acquiredKeepsakes.contains(keepsake)
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(isAcquired
+                                  ? Palette.lampSUI.opacity(0.7)
+                                  : Color.white.opacity(0.08))
+                            .frame(width: 7, height: 7)
+
+                        Text(isAcquired ? keepsake.name : "まだ見つけていないもの")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.white.opacity(isAcquired ? 0.68 : 0.24))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(height: 34)
+                    .background(Palette.surfaceSUI.opacity(isAcquired ? 0.55 : 0.28),
+                                in: RoundedRectangle(cornerRadius: 9))
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(isAcquired
+                                        ? "入手済み、\(keepsake.name)"
+                                        : "未入手")
+                    .accessibilityIdentifier("keepsake_\(keepsake.id)")
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 10)
+        .padding(.bottom, 4)
+        .accessibilityIdentifier("keepsakeCollection")
     }
 
     private func summaryStat(_ label: String, _ value: String) -> some View {

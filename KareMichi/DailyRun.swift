@@ -1,6 +1,39 @@
 import Foundation
 import SwiftData
 
+/// 正常クリアした日に、洞窟からひとつだけ持ち帰る小さな品。
+///
+/// v1ではSwiftDataへ識別子を保存せず、その日の迷路seedから復元する。
+/// 過去の取得結果を変えないため、`v1Catalog`の並び順と抽選式は変更しない。
+struct Keepsake: Identifiable, Hashable {
+    let id: String
+    let name: String
+
+    static let v1Catalog: [Keepsake] = [
+        Keepsake(id: "small-blue-stone", name: "小さな青い石"),
+        Keepsake(id: "weathered-key", name: "古びた鍵"),
+        Keepsake(id: "white-feather", name: "白い羽根"),
+        Keepsake(id: "chipped-compass", name: "欠けた方位磁針"),
+        Keepsake(id: "someones-button", name: "誰かのボタン"),
+        Keepsake(id: "dried-flower", name: "乾いた花"),
+        Keepsake(id: "rusted-coin", name: "錆びたコイン"),
+        Keepsake(id: "glass-shard", name: "ガラス片"),
+    ]
+
+    /// 日付seedだけを入力にするため、同日・再起動後も同じ品になる。
+    static func earned(seed: UInt64, reachedGoal: Bool) -> Keepsake? {
+        guard reachedGoal, !v1Catalog.isEmpty else { return nil }
+        var generator = SeededGenerator(seed: seed ^ 0x4B41_5245_4D49_4348)
+        let index = Int(generator.next() % UInt64(v1Catalog.count))
+        return v1Catalog[index]
+    }
+
+    /// コレクションは個数を持たず、少なくとも一度持ち帰った品だけを集合にする。
+    static func acquired(from runs: [DailyRun]) -> Set<Keepsake> {
+        Set(runs.compactMap(\.keepsake))
+    }
+}
+
 struct PlayStreakSummary: Equatable {
     let currentStreak: Int
     let longestStreak: Int
@@ -163,6 +196,11 @@ final class DailyRun {
 
     var eventTheme: EventTheme? {
         eventThemeRaw.flatMap { EventTheme(rawValue: $0) }
+    }
+
+    /// 正常クリアだけが取得対象。保存済みseedから毎回同じ品を復元する。
+    var keepsake: Keepsake? {
+        Keepsake.earned(seed: UInt64(max(seed, 0)), reachedGoal: reachedGoal)
     }
 
     /// 結果画面に渡すための、保存済みデータからの復元

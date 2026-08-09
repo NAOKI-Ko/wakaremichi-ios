@@ -143,6 +143,10 @@ struct ResultView: View {
         Diagnosis.eventReflection(outcome: log.eventOutcome, axes: axes)
     }
 
+    private var keepsake: Keepsake? {
+        Keepsake.earned(seed: seed, reachedGoal: log.reachedGoal)
+    }
+
     var body: some View {
         ZStack {
             Palette.backgroundSUI.ignoresSafeArea()
@@ -263,6 +267,19 @@ struct ResultView: View {
                         .accessibilityIdentifier("resultSteps")
                     stat("かかった時間", timeText)
                     stat("見た範囲", "\(percentExplored)%")
+                }
+
+                if let keepsake {
+                    VStack(spacing: 5) {
+                        Text("今日、持ち帰ったもの")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.white.opacity(0.4))
+                        Text("「\(keepsake.name)」")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Palette.lampSUI.opacity(0.82))
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("resultKeepsake")
                 }
 
                 let signals = Diagnosis.topSignals(log: log)
