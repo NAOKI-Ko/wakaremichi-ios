@@ -9,12 +9,12 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`135b101b94704bfa8cdc6911227ef8a5db8cf35a`
+`f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
 
 State Snapshot:
 `d451969ce538a9f7ea6165389da32c17f6d0719c`
 
-Review target: Gameplay Visibility Fix implementation commit produced by this work unit
+Review target: none / completed
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -27,7 +27,7 @@ Latest reviewed implementation/config status: APPROVED
 
 Current work unit: Gameplay Visibility Fix — Camera Bounds + Single Tile Set
 
-Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit status: APPROVED
 
 Continuity: Ready
 
@@ -44,6 +44,7 @@ Continuity: Ready
 - Footstep volume restoration
 - Production App Icon integration
 - Result Rewarded Ads + Replay
+- Gameplay Visibility Fix — Camera Bounds + Single Tile Set
 
 # Result Rewarded Ads + Replay
 
@@ -98,7 +99,7 @@ Integrated and APPROVED
 
 # Gameplay Visibility Fix
 
-IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+APPROVED
 
 Confirmed causes:
 
@@ -124,14 +125,19 @@ Validation:
 - Camera matrix: center, four edges, and four corners rendered and inspected
 - Bottom-right goal approach: traveler, goal flag, adjacent floor, and walls fully visible in SpriteView evidence
 - Full `MazePlayView` evidence confirms header/HUD remain separate from the SpriteKit viewport
-- Human physical-device Gate and exact-SHA review: pending
+- ChatGPT exact SHA code review: PASS
+- Human physical-device QA: PASS for center, four edges, four corners, and bottom goal visibility
+- Human floor/wall readability QA: PASS
+
+Resolved release blockers:
+
+- Map-edge camera/viewport visibility
+- Floor/wall readability
 
 Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- Gameplay Visibility Fix exact-SHA review
-- Gameplay Visibility Fix Human physical-device QA (all edges and corners)
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -143,18 +149,20 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Next Work Unit
 
-Gameplay Visibility Fix Review Gate
+Release External Alignment / Submission Readiness
 
-Status: READY FOR REVIEW
+Status: READY
 
-1. Review the exact implementation SHA.
-2. Complete Human Gate on a physical device at the center, four edges, and four corners.
-3. Confirm bottom-edge/goal visibility and floor/wall recognition.
-4. Sync the Final Review Receipt if approved.
+1. Verify Apple Developer App ID and production Bundle ID alignment.
+2. Verify the App Store Connect app record and Bundle ID alignment.
+3. Verify the AdMob app Bundle ID alignment.
+4. Decide and configure StoreKit remove-ads exposure for submission.
+5. Produce a signed Archive and complete App Store validation/upload.
+6. Complete metadata, privacy, screenshots, and territory configuration.
 
 # Do Not Start
 
-- New game features outside the active Gameplay Visibility Fix work unit
+- New game features during v1.0 release readiness
 - Banner ads
 - Interstitial ads
 - App Open ads

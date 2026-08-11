@@ -160,3 +160,55 @@ Notes:
 
 - The Result Rewarded Ads + Replay release blocker is resolved.
 - The next work unit is Release External Alignment / Submission Readiness.
+
+## 2026-08-12 — Gameplay Visibility Fix Final Review Receipt
+
+Work Unit:
+`Gameplay Visibility Fix — Camera Bounds + Single Tile Set`
+
+Specification Sync:
+`d451969ce538a9f7ea6165389da32c17f6d0719c`
+
+Final Implementation:
+`f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
+
+Final Decision: PASS / FINAL APPROVED
+
+- ChatGPT exact SHA Code Review: PASS
+- Codex Visual QA: PASS
+- Human Physical-Device QA: PASS
+- Unit Tests: 83 PASS / FAIL 0
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- `git diff --check`: PASS
+
+Approved camera behavior:
+
+- Pure, testable `MazeCameraGeometry` uses the runtime viewport and one-tile controlled overscan without zooming out.
+- Initial placement, movement, warp, restart, and resize share one clamp path.
+- `didChangeSize(_:)` reclamps the camera, while SwiftUI supplies the measured `SpriteView` size.
+- Viewport changes rebuild and resize the vignette.
+- Human QA passed at the center, four edges, four corners, and bottom goal approach.
+
+Approved tile behavior:
+
+- Floor cells use `MazeFloor`; wall cells use `MazeWall`.
+- A/B variants and chunk/hash source selection are not used during gameplay.
+- Coordinate cropping and existing tint remain within the two approved source textures.
+- Variant assets remain available for rollback.
+- Human QA confirmed immediate floor/wall recognition without distracting from gameplay objects.
+
+Non-regression:
+
+- Maze generation, daily seed, topology, collision, movement, auto slide, Fog of War, stamina, treasure, warp semantics, and goal coordinates are unchanged.
+- DailyRun, streak, collection, diagnosis, Result, Replay, Rewarded ads, audio, haptics, SwiftData schema, Bundle ID, App Icon, AdMob, StoreKit, Version, and Build are unchanged.
+
+Resolved blockers:
+
+- Map-edge camera/viewport visibility
+- Floor/wall readability
+
+Notes:
+
+- The Gameplay Visibility Fix is final-approved.
+- The next work unit is Release External Alignment / Submission Readiness.
