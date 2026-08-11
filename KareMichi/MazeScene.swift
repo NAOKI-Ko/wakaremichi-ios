@@ -1,6 +1,90 @@
 import SpriteKit
 import UIKit
 
+struct MazeCameraBounds: Equatable {
+    let minX: CGFloat
+    let maxX: CGFloat
+    let minY: CGFloat
+    let maxY: CGFloat
+
+    func contains(_ point: CGPoint) -> Bool {
+        point.x >= minX && point.x <= maxX
+            && point.y >= minY && point.y <= maxY
+    }
+}
+
+enum MazeCameraGeometry {
+    static func bounds(worldSize: CGSize,
+                       viewportSize: CGSize,
+                       edgeContextMargin: CGFloat) -> MazeCameraBounds {
+        let x = axisBounds(world: worldSize.width,
+                           viewport: viewportSize.width,
+                           edgeContextMargin: edgeContextMargin)
+        let y = axisBounds(world: worldSize.height,
+                           viewport: viewportSize.height,
+                           edgeContextMargin: edgeContextMargin)
+        return MazeCameraBounds(minX: x.lowerBound,
+                                maxX: x.upperBound,
+                                minY: y.lowerBound,
+                                maxY: y.upperBound)
+    }
+
+    static func clampedPosition(_ desired: CGPoint,
+                                worldSize: CGSize,
+                                viewportSize: CGSize,
+                                edgeContextMargin: CGFloat) -> CGPoint {
+        let validBounds = bounds(worldSize: worldSize,
+                                 viewportSize: viewportSize,
+                                 edgeContextMargin: edgeContextMargin)
+        let fallback = CGPoint(x: (validBounds.minX + validBounds.maxX) / 2,
+                               y: (validBounds.minY + validBounds.maxY) / 2)
+        let desiredX = desired.x.isFinite ? desired.x : fallback.x
+        let desiredY = desired.y.isFinite ? desired.y : fallback.y
+        return CGPoint(x: min(max(desiredX, validBounds.minX), validBounds.maxX),
+                       y: min(max(desiredY, validBounds.minY), validBounds.maxY))
+    }
+
+    private static func axisBounds(world: CGFloat,
+                                   viewport: CGFloat,
+                                   edgeContextMargin: CGFloat) -> ClosedRange<CGFloat> {
+        let world = sanitizedDimension(world)
+        let viewport = sanitizedDimension(viewport)
+        let requestedMargin = edgeContextMargin.isFinite ? max(edgeContextMargin, 0) : 0
+        let halfViewport = viewport / 2
+        // Overscanは最大でもviewportの半分。通常はMazeScene側から1タイルだけ渡す。
+        let overscan = min(requestedMargin, halfViewport)
+        let lower = halfViewport - overscan
+        let upper = world - halfViewport + overscan
+
+        guard lower <= upper else {
+            let center = world / 2
+            return center...center
+        }
+        return lower...upper
+    }
+
+    private static func sanitizedDimension(_ value: CGFloat) -> CGFloat {
+        value.isFinite ? max(value, 0) : 0
+    }
+}
+
+enum MazeTileKind {
+    case floor
+    case wall
+}
+
+enum MazeTileSource {
+    static let floorTextureName = "MazeFloor"
+    static let wallTextureName = "MazeWall"
+
+    static func textureName(for kind: MazeTileKind) -> String {
+        switch kind {
+        case .floor: return floorTextureName
+        case .wall: return wallTextureName
+        }
+    }
+}
+
 final class MazeScene: SKScene {
 
     let game: MazeGame
@@ -28,22 +112,14 @@ final class MazeScene: SKScene {
     private var playerNode: SKSpriteNode!
     private var glowNode: SKSpriteNode!
     private var cameraNode: SKCameraNode!
+    private var vignetteNode: SKSpriteNode?
 
     private var isWalking = false
     private var finished = false
 
-    // 床・壁は区画ごとに3種類から選ぶ。ゴールやスタートからの距離は使わず、
-    // 座標だけで決めるため、質感が進行方向のヒントにはならない。
-    private static let floorTextures = [
-        SKTexture(imageNamed: "MazeFloor"),
-        SKTexture(imageNamed: "FloorVariantA"),
-        SKTexture(imageNamed: "FloorVariantB"),
-    ]
-    private static let wallTextures = [
-        SKTexture(imageNamed: "MazeWall"),
-        SKTexture(imageNamed: "WallVariantA"),
-        SKTexture(imageNamed: "WallVariantB"),
-    ]
+    // v1.0は床／壁の即時判別を優先し、source textureを各1種類に固定する。
+    private static let floorTexture = SKTexture(imageNamed: MazeTileSource.textureName(for: .floor))
+    private static let wallTexture = SKTexture(imageNamed: MazeTileSource.textureName(for: .wall))
     private static let chestClosedTexture = SKTexture(imageNamed: "ChestClosed")
     private static let chestOpenTexture = SKTexture(imageNamed: "ChestOpen")
     private static let warpTexture = SKTexture(imageNamed: "WarpPortal")
@@ -63,8 +139,7 @@ final class MazeScene: SKScene {
         self.todaysEvent = event
         let viewport = CGFloat(Tuning.viewportTiles) * MazeScene.tile
         super.init(size: CGSize(width: viewport, height: viewport))
-        // SpriteViewの縦長領域へ追従し、正方形シーンの上下に余白を作らない。
-        // タイルやカメラのゲームロジックは変えず、表示領域だけを埋める。
+        // SpriteViewの縦長領域へ追従し、実際の表示領域をカメラ計算へ反映する。
         scaleMode = .resizeFill
         backgroundColor = Palette.background
     }
@@ -88,6 +163,35 @@ final class MazeScene: SKScene {
         discoverHaptic.prepare()
         GameAudio.shared.startBGM()
         GameAudio.shared.startAmbientWind()
+    }
+
+    override func didChangeSize(_ oldSize: CGSize) {
+        super.didChangeSize(oldSize)
+        refreshViewportGeometry()
+    }
+
+    /// SwiftUIが確定したSpriteViewの実測サイズを初期表示から共有する。
+    /// resizeFill任せの通知順序に依存せず、以後の変更もdidChangeSizeと同じ経路へ流す。
+    func updateViewportSize(_ viewportSize: CGSize) {
+        guard viewportSize.width.isFinite,
+              viewportSize.height.isFinite,
+              viewportSize.width > 0,
+              viewportSize.height > 0 else { return }
+
+        if size != viewportSize {
+            size = viewportSize
+        } else {
+            refreshViewportGeometry()
+        }
+    }
+
+    private func refreshViewportGeometry() {
+        guard cameraNode != nil else { return }
+
+        // resizeFill後の実効viewportを正本にし、古いサイズ向けの移動先を残さない。
+        cameraNode.removeAllActions()
+        cameraNode.position = clampedCameraPosition(point(for: game.player))
+        updateVignette()
     }
 
     private func makeHUDSnapshot() -> HUDSnapshot {
@@ -119,13 +223,14 @@ final class MazeScene: SKScene {
     }
 
     private func clampedCameraPosition(_ p: CGPoint) -> CGPoint {
-        let halfW = size.width / 2
-        let halfH = size.height / 2
-        let worldW = CGFloat(game.maze.width) * Self.tile
-        let worldH = CGFloat(game.maze.height) * Self.tile
-        let x = min(max(p.x, halfW), max(worldW - halfW, halfW))
-        let y = min(max(p.y, halfH), max(worldH - halfH, halfH))
-        return CGPoint(x: x, y: y)
+        let worldSize = CGSize(width: CGFloat(game.maze.width) * Self.tile,
+                               height: CGFloat(game.maze.height) * Self.tile)
+        return MazeCameraGeometry.clampedPosition(
+            p,
+            worldSize: worldSize,
+            viewportSize: size,
+            edgeContextMargin: Self.tile
+        )
     }
 
     // MARK: - タイルの遅延生成
@@ -165,10 +270,7 @@ final class MazeScene: SKScene {
 
         let size = CGSize(width: Self.tile - 3, height: Self.tile - 3)
 
-        let variant = Self.floorTextures[
-            Self.variantIndex(for: c, count: Self.floorTextures.count, salt: 0x5100)
-        ]
-        let texture = SKSpriteNode(texture: Self.croppedTexture(from: variant, for: c))
+        let texture = SKSpriteNode(texture: Self.croppedTexture(from: Self.floorTexture, for: c))
         texture.size = size
         container.addChild(texture)
 
@@ -192,10 +294,7 @@ final class MazeScene: SKScene {
 
         let size = CGSize(width: Self.tile - 0.5, height: Self.tile - 0.5)
 
-        let variant = Self.wallTextures[
-            Self.variantIndex(for: c, count: Self.wallTextures.count, salt: 0x7A11)
-        ]
-        let texture = SKSpriteNode(texture: Self.croppedTexture(from: variant, for: c))
+        let texture = SKSpriteNode(texture: Self.croppedTexture(from: Self.wallTexture, for: c))
         texture.size = size
         container.addChild(texture)
 
@@ -208,21 +307,6 @@ final class MazeScene: SKScene {
 
         addChild(container)
         return container
-    }
-
-    /// 6x6マスの区画ごとに同じ質感を使い、1マス単位のちらつきを避ける。
-    /// 区画座標だけをハッシュ化するため、迷路形状やゴール位置には依存しない。
-    private static let chunkSize = 6
-
-    private static func variantIndex(for coord: Coord, count: Int, salt: UInt64) -> Int {
-        let chunkX = coord.x / chunkSize
-        let chunkY = coord.y / chunkSize
-        var value = UInt64(
-            bitPattern: Int64(chunkX) &* 0x9E37_79B1 &+ Int64(chunkY) &* 0x85EB_CA6B
-        )
-        value ^= salt
-        value = (value ^ (value >> 15)) &* 0x2545_F491_4F6C_DD1D
-        return Int(value % UInt64(count))
     }
 
     /// 大きな1枚の素材から、マスごとに少しずつ違う場所を切り出す。
@@ -343,11 +427,19 @@ final class MazeScene: SKScene {
     }
 
     private func buildVignette() {
-        let node = SKSpriteNode(texture: MazeScene.vignetteTexture(size: size))
-        node.size = size
+        let node = SKSpriteNode()
         node.position = .zero
         node.zPosition = 20
         cameraNode.addChild(node)
+        vignetteNode = node
+        updateVignette()
+    }
+
+    private func updateVignette() {
+        guard let vignetteNode, size.width > 0, size.height > 0 else { return }
+        vignetteNode.texture = MazeScene.vignetteTexture(size: size)
+        vignetteNode.size = size
+        vignetteNode.position = .zero
     }
 
     private static func glowTexture(diameter: CGFloat, color: UIColor) -> SKTexture {

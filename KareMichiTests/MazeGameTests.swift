@@ -617,10 +617,13 @@ final class MazeGameTests: XCTestCase {
         let tile: CGFloat = 40
         let startPoint = CGPoint(x: (CGFloat(maze.start.x) + 0.5) * tile,
                                  y: (CGFloat(maze.height - 1 - maze.start.y) + 0.5) * tile)
-        let half = scene.size.width / 2
-        let world = CGFloat(maze.width) * tile
-        let expectedCamera = CGPoint(x: min(max(startPoint.x, half), max(world - half, half)),
-                                     y: min(max(startPoint.y, half), max(world - half, half)))
+        let expectedCamera = MazeCameraGeometry.clampedPosition(
+            startPoint,
+            worldSize: CGSize(width: CGFloat(maze.width) * tile,
+                              height: CGFloat(maze.height) * tile),
+            viewportSize: scene.size,
+            edgeContextMargin: tile
+        )
 
         XCTAssertEqual(player.position.x, startPoint.x, accuracy: 0.001)
         XCTAssertEqual(player.position.y, startPoint.y, accuracy: 0.001)
@@ -628,6 +631,212 @@ final class MazeGameTests: XCTestCase {
         XCTAssertEqual(glow.position.y, startPoint.y, accuracy: 0.001)
         XCTAssertEqual(camera.position.x, expectedCamera.x, accuracy: 0.001)
         XCTAssertEqual(camera.position.y, expectedCamera.y, accuracy: 0.001)
+    }
+
+    func testCameraGeometryLeavesValidCenterPositionUnchanged() {
+        let position = MazeCameraGeometry.clampedPosition(
+            CGPoint(x: 1_020, y: 1_020),
+            worldSize: CGSize(width: 2_040, height: 2_040),
+            viewportSize: CGSize(width: 520, height: 400),
+            edgeContextMargin: 40
+        )
+        XCTAssertEqual(position.x, 1_020, accuracy: 0.001)
+        XCTAssertEqual(position.y, 1_020, accuracy: 0.001)
+    }
+
+    func testCameraGeometryClampsHorizontalMinimum() {
+        let position = cameraPosition(CGPoint(x: -100, y: 1_020))
+        XCTAssertEqual(position.x, 220, accuracy: 0.001)
+        XCTAssertEqual(position.y, 1_020, accuracy: 0.001)
+    }
+
+    func testCameraGeometryClampsHorizontalMaximum() {
+        let position = cameraPosition(CGPoint(x: 3_000, y: 1_020))
+        XCTAssertEqual(position.x, 1_820, accuracy: 0.001)
+        XCTAssertEqual(position.y, 1_020, accuracy: 0.001)
+    }
+
+    func testCameraGeometryClampsVerticalMinimum() {
+        let position = cameraPosition(CGPoint(x: 1_020, y: -100))
+        XCTAssertEqual(position.x, 1_020, accuracy: 0.001)
+        XCTAssertEqual(position.y, 160, accuracy: 0.001)
+    }
+
+    func testCameraGeometryClampsVerticalMaximum() {
+        let position = cameraPosition(CGPoint(x: 1_020, y: 3_000))
+        XCTAssertEqual(position.x, 1_020, accuracy: 0.001)
+        XCTAssertEqual(position.y, 1_880, accuracy: 0.001)
+    }
+
+    func testCameraGeometryClampsAllFourCorners() {
+        let expected: [(CGPoint, CGPoint)] = [
+            (CGPoint(x: -100, y: 3_000), CGPoint(x: 220, y: 1_880)),
+            (CGPoint(x: 3_000, y: 3_000), CGPoint(x: 1_820, y: 1_880)),
+            (CGPoint(x: -100, y: -100), CGPoint(x: 220, y: 160)),
+            (CGPoint(x: 3_000, y: -100), CGPoint(x: 1_820, y: 160)),
+        ]
+
+        for (desired, clamped) in expected {
+            let actual = cameraPosition(desired)
+            XCTAssertEqual(actual.x, clamped.x, accuracy: 0.001)
+            XCTAssertEqual(actual.y, clamped.y, accuracy: 0.001)
+        }
+    }
+
+    func testCameraGeometryViewportResizeChangesBounds() {
+        let world = CGSize(width: 2_040, height: 2_040)
+        let small = MazeCameraGeometry.bounds(
+            worldSize: world,
+            viewportSize: CGSize(width: 320, height: 400),
+            edgeContextMargin: 40
+        )
+        let standard = MazeCameraGeometry.bounds(
+            worldSize: world,
+            viewportSize: CGSize(width: 390, height: 600),
+            edgeContextMargin: 40
+        )
+
+        XCTAssertEqual(small.minX, 120, accuracy: 0.001)
+        XCTAssertEqual(small.maxX, 1_920, accuracy: 0.001)
+        XCTAssertEqual(small.minY, 160, accuracy: 0.001)
+        XCTAssertEqual(small.maxY, 1_880, accuracy: 0.001)
+        XCTAssertEqual(standard.minX, 155, accuracy: 0.001)
+        XCTAssertEqual(standard.maxX, 1_885, accuracy: 0.001)
+        XCTAssertEqual(standard.minY, 260, accuracy: 0.001)
+        XCTAssertEqual(standard.maxY, 1_780, accuracy: 0.001)
+    }
+
+    func testCameraGeometryCentersAxisWhenViewportIsLargerThanWorld() {
+        let bounds = MazeCameraGeometry.bounds(
+            worldSize: CGSize(width: 300, height: 2_040),
+            viewportSize: CGSize(width: 600, height: 400),
+            edgeContextMargin: 40
+        )
+        let position = MazeCameraGeometry.clampedPosition(
+            CGPoint(x: -1_000, y: 1_020),
+            worldSize: CGSize(width: 300, height: 2_040),
+            viewportSize: CGSize(width: 600, height: 400),
+            edgeContextMargin: 40
+        )
+
+        XCTAssertEqual(bounds.minX, 150, accuracy: 0.001)
+        XCTAssertEqual(bounds.maxX, 150, accuracy: 0.001)
+        XCTAssertEqual(position.x, 150, accuracy: 0.001)
+        XCTAssertLessThanOrEqual(bounds.minX, bounds.maxX)
+    }
+
+    func testCameraGeometryReturnsFiniteValidPositionForInvalidInput() {
+        let world = CGSize(width: CGFloat.nan, height: CGFloat.infinity)
+        let viewport = CGSize(width: CGFloat.infinity, height: CGFloat.nan)
+        let bounds = MazeCameraGeometry.bounds(worldSize: world,
+                                               viewportSize: viewport,
+                                               edgeContextMargin: CGFloat.nan)
+        let position = MazeCameraGeometry.clampedPosition(
+            CGPoint(x: CGFloat.nan, y: CGFloat.infinity),
+            worldSize: world,
+            viewportSize: viewport,
+            edgeContextMargin: CGFloat.nan
+        )
+
+        XCTAssertTrue(position.x.isFinite)
+        XCTAssertTrue(position.y.isFinite)
+        XCTAssertTrue(bounds.contains(position))
+        XCTAssertLessThanOrEqual(bounds.minX, bounds.maxX)
+        XCTAssertLessThanOrEqual(bounds.minY, bounds.maxY)
+    }
+
+    func testCameraGeometryAlwaysReturnsPositionInsideBounds() {
+        let world = CGSize(width: 2_040, height: 2_040)
+        let viewport = CGSize(width: 390, height: 600)
+        let bounds = MazeCameraGeometry.bounds(worldSize: world,
+                                               viewportSize: viewport,
+                                               edgeContextMargin: 40)
+        for x in stride(from: CGFloat(-500), through: 2_500, by: 137) {
+            for y in stride(from: CGFloat(-500), through: 2_500, by: 191) {
+                let position = MazeCameraGeometry.clampedPosition(
+                    CGPoint(x: x, y: y),
+                    worldSize: world,
+                    viewportSize: viewport,
+                    edgeContextMargin: 40
+                )
+                XCTAssertTrue(bounds.contains(position), "\(position)")
+            }
+        }
+    }
+
+    func testCameraGeometryUsesOneTileControlledOverscan() {
+        let strict = MazeCameraGeometry.bounds(
+            worldSize: CGSize(width: 2_040, height: 2_040),
+            viewportSize: CGSize(width: 520, height: 400),
+            edgeContextMargin: 0
+        )
+        let contextual = MazeCameraGeometry.bounds(
+            worldSize: CGSize(width: 2_040, height: 2_040),
+            viewportSize: CGSize(width: 520, height: 400),
+            edgeContextMargin: 40
+        )
+
+        XCTAssertEqual(strict.minX, 260, accuracy: 0.001)
+        XCTAssertEqual(contextual.minX, 220, accuracy: 0.001)
+        XCTAssertEqual(contextual.maxX - strict.maxX, 40, accuracy: 0.001)
+        // 外周から1マス内側の通路中心(60pt)が画面端から100pt見える。
+        XCTAssertEqual(60 - (contextual.minX - 260), 100, accuracy: 0.001)
+    }
+
+    @MainActor
+    func testSceneResizeReclampsCameraAndResizesVignette() throws {
+        let maze = Maze.generate(seed: 20_260_809)
+        let game = MazeGame(maze: maze)
+        let scene = MazeScene(game: game, traveler: .wanderer)
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 520, height: 520))
+        view.presentScene(scene)
+
+        scene.size = CGSize(width: 320, height: 400)
+        var mirror = Mirror(reflecting: scene)
+        let camera = try XCTUnwrap(mirror.children.first { $0.label == "cameraNode" }?.value
+            as? SKCameraNode)
+        let vignette = try XCTUnwrap(mirror.children.first { $0.label == "vignetteNode" }?.value
+            as? SKSpriteNode)
+        XCTAssertEqual(camera.position.x, 120, accuracy: 0.001)
+        XCTAssertEqual(camera.position.y, 1_880, accuracy: 0.001)
+        XCTAssertEqual(vignette.size.width, 320, accuracy: 0.001)
+        XCTAssertEqual(vignette.size.height, 400, accuracy: 0.001)
+
+        scene.size = CGSize(width: 390, height: 600)
+        mirror = Mirror(reflecting: scene)
+        let resizedCamera = try XCTUnwrap(mirror.children.first { $0.label == "cameraNode" }?.value
+            as? SKCameraNode)
+        let resizedVignette = try XCTUnwrap(mirror.children.first { $0.label == "vignetteNode" }?.value
+            as? SKSpriteNode)
+        XCTAssertEqual(resizedCamera.position.x, 155, accuracy: 0.001)
+        XCTAssertEqual(resizedCamera.position.y, 1_780, accuracy: 0.001)
+        XCTAssertEqual(resizedVignette.size.width, 390, accuracy: 0.001)
+        XCTAssertEqual(resizedVignette.size.height, 600, accuracy: 0.001)
+    }
+
+    func testSingleTileSetAlwaysSelectsMazeFloorAndMazeWall() {
+        XCTAssertEqual(MazeTileSource.textureName(for: .floor), "MazeFloor")
+        XCTAssertEqual(MazeTileSource.textureName(for: .wall), "MazeWall")
+        XCTAssertFalse([MazeTileSource.floorTextureName, MazeTileSource.wallTextureName]
+            .contains("FloorVariantA"))
+        XCTAssertFalse([MazeTileSource.floorTextureName, MazeTileSource.wallTextureName]
+            .contains("WallVariantA"))
+    }
+
+    func testSingleTileSetDoesNotVaryByCoordinateOrDailySeed() {
+        for seed in [UInt64(20_260_809), 20_260_810, 20_260_811] {
+            let maze = Maze.generate(seed: seed)
+            for y in 0..<maze.height {
+                for x in 0..<maze.width {
+                    let coord = Coord(x: x, y: y)
+                    let kind: MazeTileKind = maze.isWall(coord) ? .wall : .floor
+                    let expected = maze.isWall(coord) ? "MazeWall" : "MazeFloor"
+                    let source = MazeTileSource.textureName(for: kind)
+                    XCTAssertEqual(source, expected, "seed=\(seed), coord=\(coord)")
+                    XCTAssertFalse(source.contains("Variant"))
+                }
+            }
+        }
     }
 
     func testPersonalityCodeUsesRankedAxes() {
@@ -1443,6 +1652,60 @@ final class MazeGameTests: XCTestCase {
                          path: "/tmp/KareMichi-result-replay-visual.png")
     }
 
+    @MainActor
+    func testGameplayVisibilityRendersAllEdgesOnSmallAndStandardPhones() throws {
+        let maze = Maze.generate(seed: 20_260_809)
+        let goalApproach = try XCTUnwrap(
+            Direction.allCases
+                .map { maze.goal.moved($0) }
+                .first(where: maze.isOpen),
+            "goal must have an open adjacent approach cell"
+        )
+        let positions: [(String, Coord)] = [
+            ("center", Coord(x: 25, y: 25)),
+            ("top", Coord(x: 25, y: 1)),
+            ("bottom", Coord(x: 25, y: 49)),
+            ("left", Coord(x: 1, y: 25)),
+            ("right", Coord(x: 49, y: 25)),
+            ("top-left", Coord(x: 1, y: 1)),
+            ("top-right", Coord(x: 49, y: 1)),
+            ("bottom-left", Coord(x: 1, y: 49)),
+            ("bottom-right-near-goal", goalApproach),
+        ]
+        let viewports: [(String, CGSize)] = [
+            ("small", CGSize(width: 320, height: 568)),
+            ("standard", CGSize(width: 390, height: 844)),
+        ]
+
+        for (viewportName, size) in viewports {
+            for (positionName, coord) in positions {
+                let fixture = try visibilityPlayView(target: coord)
+                let playView = fixture.view
+                    .frame(width: size.width, height: size.height)
+                try renderVisual(
+                    playView,
+                    size: size,
+                    name: "Visibility \(viewportName) — \(positionName)",
+                    path: "/tmp/KareMichi-visibility-\(viewportName)-\(positionName).png",
+                    spriteViewPath: "/tmp/KareMichi-visibility-\(viewportName)-\(positionName)-scene.png"
+                )
+                XCTAssertEqual(fixture.scene.size.width, size.width, accuracy: 0.5)
+                XCTAssertGreaterThan(fixture.scene.size.height, 0)
+                XCTAssertLessThan(fixture.scene.size.height, size.height)
+                let expectedCamera = MazeCameraGeometry.clampedPosition(
+                    CGPoint(x: (CGFloat(coord.x) + 0.5) * 40,
+                            y: (CGFloat(fixture.scene.game.maze.height - 1 - coord.y) + 0.5) * 40),
+                    worldSize: CGSize(width: 2_040, height: 2_040),
+                    viewportSize: fixture.scene.size,
+                    edgeContextMargin: 40
+                )
+                let cameraPosition = try XCTUnwrap(fixture.scene.camera?.position)
+                XCTAssertEqual(cameraPosition.x, expectedCamera.x, accuracy: 0.5)
+                XCTAssertEqual(cameraPosition.y, expectedCamera.y, accuracy: 0.5)
+            }
+        }
+    }
+
     func testCollectionAndStoreBranchesDoNotNeedAConfiguredProduct() {
         XCTAssertEqual(StoreManager.remainingAdActions(isPurchased: false,
                                                        replayCount: 1,
@@ -1565,6 +1828,34 @@ final class MazeGameTests: XCTestCase {
         return text
     }
 
+    private func cameraPosition(_ desired: CGPoint) -> CGPoint {
+        MazeCameraGeometry.clampedPosition(
+            desired,
+            worldSize: CGSize(width: 2_040, height: 2_040),
+            viewportSize: CGSize(width: 520, height: 400),
+            edgeContextMargin: 40
+        )
+    }
+
+    @MainActor
+    private func visibilityPlayView(target: Coord) throws -> (view: MazePlayView, scene: MazeScene) {
+        let maze = Maze.generate(seed: 20_260_809)
+        XCTAssertTrue(maze.isOpen(target), "target must be an open maze cell")
+        let game = MazeGame(maze: maze)
+        let path = try XCTUnwrap(shortestPath(in: maze, from: maze.start, to: target))
+        advanceWithoutStamina(game, along: path)
+        let scene = MazeScene(game: game, traveler: .wanderer)
+        let hud = HUDSnapshot(mazeSize: maze.width,
+                              player: game.player,
+                              goal: maze.goal,
+                              explored: game.explored,
+                              walked: game.walked,
+                              stamina: game.stamina,
+                              staminaMax: Tuning.staminaMax,
+                              traveler: .wanderer)
+        return (MazePlayView(scene: scene, warning: nil, hud: hud), scene)
+    }
+
     private func allCells(in maze: Maze) -> [Coord] {
         (0..<maze.height).flatMap { y in
             (0..<maze.width).map { x in Coord(x: x, y: y) }
@@ -1628,7 +1919,8 @@ final class MazeGameTests: XCTestCase {
     private func renderVisual<V: View>(_ view: V,
                                        size: CGSize,
                                        name: String,
-                                       path: String) throws {
+                                       path: String,
+                                       spriteViewPath: String? = nil) throws {
         let window = UIWindow(frame: CGRect(origin: .zero, size: size))
         let controller = UIHostingController(rootView: view.environment(\.colorScheme, .dark))
         window.rootViewController = controller
@@ -1636,7 +1928,9 @@ final class MazeGameTests: XCTestCase {
         controller.view.frame = window.bounds
         controller.view.setNeedsLayout()
         controller.view.layoutIfNeeded()
-        RunLoop.main.run(until: Date().addingTimeInterval(0.15))
+        // SpriteKitのresizeFill・didChangeSize・カメラ再クランプがGPU描画へ
+        // 反映された後の証跡を取得する。
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
 
         let renderer = UIGraphicsImageRenderer(size: size)
         let image = renderer.image { _ in
@@ -1651,7 +1945,32 @@ final class MazeGameTests: XCTestCase {
         add(attachment)
         try XCTUnwrap(image.pngData()).write(to: URL(fileURLWithPath: path),
                                              options: .atomic)
+
+        if let spriteViewPath,
+           let spriteView = firstSubview(of: SKView.self, in: controller.view) {
+            let spriteRenderer = UIGraphicsImageRenderer(size: spriteView.bounds.size)
+            let spriteImage = spriteRenderer.image { _ in
+                XCTAssertTrue(spriteView.drawHierarchy(in: spriteView.bounds,
+                                                       afterScreenUpdates: true))
+            }
+            let spriteAttachment = XCTAttachment(image: spriteImage)
+            spriteAttachment.name = "\(name) — SpriteView"
+            spriteAttachment.lifetime = .keepAlways
+            add(spriteAttachment)
+            try XCTUnwrap(spriteImage.pngData()).write(
+                to: URL(fileURLWithPath: spriteViewPath),
+                options: .atomic
+            )
+        }
         window.isHidden = true
+    }
+
+    private func firstSubview<T: UIView>(of type: T.Type, in root: UIView) -> T? {
+        if let match = root as? T { return match }
+        for child in root.subviews {
+            if let match = firstSubview(of: type, in: child) { return match }
+        }
+        return nil
     }
 
     @MainActor

@@ -946,24 +946,32 @@ struct MazePlayView: View {
 
             // SKSceneは表示領域へ追従するため、SwiftUI側では正方形制約を重ねず、
             // 上部バーとHUDの間をすべて迷路へ渡す。
-            SpriteView(scene: scene, options: [.ignoresSiblingOrder])
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .allowsHitTesting(!isInputBlocked)
-                .gesture(
-                    DragGesture(minimumDistance: Tuning.swipeMinDistance)
-                        .onEnded { value in
-                            guard !isInputBlocked else { return }
-                            let t = value.translation
-                            let direction: Direction
-                            if abs(t.width) > abs(t.height) {
-                                direction = t.width > 0 ? .right : .left
-                            } else {
-                                direction = t.height > 0 ? .down : .up
+            GeometryReader { viewport in
+                SpriteView(scene: scene, options: [.ignoresSiblingOrder])
+                    .contentShape(Rectangle())
+                    .allowsHitTesting(!isInputBlocked)
+                    .gesture(
+                        DragGesture(minimumDistance: Tuning.swipeMinDistance)
+                            .onEnded { value in
+                                guard !isInputBlocked else { return }
+                                let t = value.translation
+                                let direction: Direction
+                                if abs(t.width) > abs(t.height) {
+                                    direction = t.width > 0 ? .right : .left
+                                } else {
+                                    direction = t.height > 0 ? .down : .up
+                                }
+                                scene.receive(direction: direction)
                             }
-                            scene.receive(direction: direction)
-                        }
-                )
+                    )
+                    .onAppear {
+                        scene.updateViewportSize(viewport.size)
+                    }
+                    .onChange(of: viewport.size) { _, newSize in
+                        scene.updateViewportSize(newSize)
+                    }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // --- 下部HUD: 旅人・体力・ミニマップ ---
             Rectangle()

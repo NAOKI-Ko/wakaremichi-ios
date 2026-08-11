@@ -12,22 +12,22 @@ Latest reviewed implementation/config commit:
 `135b101b94704bfa8cdc6911227ef8a5db8cf35a`
 
 State Snapshot:
-`8ce815b954034d6cbd290715677d8203b578c54a`
+`d451969ce538a9f7ea6165389da32c17f6d0719c`
 
-Review target: Gameplay Visibility Fix specification-sync commit produced by this work unit
+Review target: Gameplay Visibility Fix implementation commit produced by this work unit
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
 - Human device QA: PASS
-- Unit Tests: 68 PASS / FAIL 0
+- Unit Tests: 83 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
 Current work unit: Gameplay Visibility Fix — Camera Bounds + Single Tile Set
 
-Current work unit status: SPEC READY / IMPLEMENTATION NOT STARTED
+Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -98,26 +98,40 @@ Integrated and APPROVED
 
 # Gameplay Visibility Fix
 
-SPEC READY / IMPLEMENTATION NOT STARTED
+IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
-Release-blocking user QA findings:
+Confirmed causes:
 
-- Map-edge camera/viewport behavior can push the player, nearby path, or goal outside the useful visible area.
-- Multiple floor/wall source textures reduce immediate passable/impassable recognition.
+- The former world-flush camera clamp left no protected context margin at the walkable perimeter.
+- SpriteKit viewport changes did not immediately reclamp the camera or rebuild the vignette.
+- Three coordinate-selected source textures per cell kind reduced instant floor/wall recognition.
 
-Approved specification direction:
+Implemented:
 
-- Use a viewport-aware camera clamp across the center, four edges, and four corners.
-- Recalculate camera bounds when the SpriteKit viewport changes and validate the complete SwiftUI/SpriteKit crop.
-- Use `MazeFloor` as the single floor texture and `MazeWall` as the single wall texture for v1.0.
-- Keep unused variant assets for rollback; do not change maze generation, Fog of War, topology, collision, or gameplay rules.
+- Added a pure, testable camera-bounds calculation with one-tile controlled overscan.
+- Initial placement, movement, warp, restart, and resize all use the same camera clamp path.
+- `didChangeSize(_:)` and the measured SwiftUI `SpriteView` size immediately reclamp the camera and resize the vignette.
+- Floor cells always use `MazeFloor`; wall cells always use `MazeWall`.
+- Coordinate cropping remains within those two source textures; variant assets remain available for rollback.
+- Maze generation, topology, collision, movement, Fog of War, HUD semantics, persistence, ads, audio, and identifiers are unchanged.
+
+Validation:
+
+- Unit Tests: 83 PASS / FAIL 0 (68 existing plus 15 focused visibility tests)
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned clean build: PASS
+- First Visual QA: PASS on 320x568 and 390x844 layouts
+- Camera matrix: center, four edges, and four corners rendered and inspected
+- Bottom-right goal approach: traveler, goal flag, adjacent floor, and walls fully visible in SpriteView evidence
+- Full `MazePlayView` evidence confirms header/HUD remain separate from the SpriteKit viewport
+- Human physical-device Gate and exact-SHA review: pending
 
 Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- Map-edge camera/viewport visibility bug
-- Floor/wall texture readability issue
+- Gameplay Visibility Fix exact-SHA review
+- Gameplay Visibility Fix Human physical-device QA (all edges and corners)
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -129,15 +143,14 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Next Work Unit
 
-Gameplay Visibility Fix Implementation
+Gameplay Visibility Fix Review Gate
 
-Status: SPEC READY / IMPLEMENTATION NOT STARTED
+Status: READY FOR REVIEW
 
-1. Implement viewport-aware camera bounds and size-change handling.
-2. Fix gameplay rendering to the `MazeFloor` / `MazeWall` single tile set.
-3. Run focused/full tests and Debug/Release builds.
-4. Complete small/standard iPhone visual QA at the center, four edges, and four corners.
-5. Complete Human Gate and exact SHA review.
+1. Review the exact implementation SHA.
+2. Complete Human Gate on a physical device at the center, four edges, and four corners.
+3. Confirm bottom-edge/goal visibility and floor/wall recognition.
+4. Sync the Final Review Receipt if approved.
 
 # Do Not Start
 
