@@ -96,3 +96,67 @@ Notes:
 
 - The App Icon integration blocker is resolved.
 - The next work unit is Result Rewarded Ads + Replay.
+
+## 2026-08-12 — Result Rewarded Ads + Replay Final Review Receipt
+
+Work Unit:
+`Result Rewarded Ads + Replay`
+
+Initial Implementation:
+`2f59deb000acbd9a0b30fb56da602233ccb099cf`
+
+Initial Review: FIX REQUIRED
+
+Reason:
+
+- When Rewarded was not loaded, the Result Gate could wait for ad loading to finish.
+
+Review Fix:
+`135b101b94704bfa8cdc6911227ef8a5db8cf35a`
+
+Fix:
+
+- Added the ready-only Result/Replay ad path `showRewardedAdIfReady`.
+- An unready ad now returns an immediate unavailable outcome.
+- Result fails open without waiting; Replay stays on the Result screen.
+
+Re-review:
+
+- ChatGPT exact SHA Code Review: PASS
+- Human Device QA: PASS
+
+Final Decision: PASS / FINAL APPROVED
+
+Validation:
+
+- Unit Tests: 68 PASS / FAIL 0
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- `git diff --check`: PASS
+
+Human QA:
+
+- Google official test Rewarded presentation: PASS
+- Result Gate Rewarded flow: PASS
+- Result transition after reward: PASS
+- Cancellation before reward and Result fallback: PASS
+- Next Rewarded reload after dismissal: PASS
+- Result-screen Replay CTA: PASS
+- Replay start after reward: PASS
+- Same day, seed, and maze: PASS
+- Replay gameplay reset: PASS
+- Replay Result presentation: PASS
+
+Approved behavior:
+
+- Official Daily completion is saved before advertising.
+- Result fails open when an ad is unavailable, consent-blocked, or cannot be presented.
+- Replay starts only after reward and remains memory-only through `RunSessionMode.replay`.
+- Replay does not modify the official `DailyRun`, completion, streaks, completed-day count, keepsake/collection, first official diagnosis, or saved official axes/result.
+- The SwiftData schema is unchanged.
+- `RewardedGateState` and `RewardedAdSession` preserve exactly-once Result and Replay transitions.
+
+Notes:
+
+- The Result Rewarded Ads + Replay release blocker is resolved.
+- The next work unit is Release External Alignment / Submission Readiness.

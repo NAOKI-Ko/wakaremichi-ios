@@ -9,25 +9,25 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`e7bfbb4b92ba5c196bb1782fd883f2f125310a6e`
+`135b101b94704bfa8cdc6911227ef8a5db8cf35a`
 
 State Snapshot:
 `bfcd2a8c45d39ea0ac935696474fec144e67f700`
 
-Review target: Result Rewarded Ads + Replay review-fix commit produced by this work unit
+Review target: none (completed)
 
 Latest reviewed implementation/config status: APPROVED
 
-- Code/config review: PASS
-- Unit Tests: 53 PASS
-- Debug Build: PASS
-- Release Generic iOS Device Build: PASS (`CODE_SIGNING_ALLOWED=NO`)
+- ChatGPT exact SHA code review: PASS
+- Human device QA: PASS
+- Unit Tests: 68 PASS / FAIL 0
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- `git diff --check`: PASS
 
-Current work unit: Result Rewarded Ads + Replay
+Current work unit: Release External Alignment / Submission Readiness
 
-Current work unit review status: NOT REVIEWED
-
-Current work unit implementation status: REVIEW FIX IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit status: NOT STARTED
 
 Continuity: Ready
 
@@ -43,27 +43,31 @@ Continuity: Ready
 - Exploration UI polish
 - Footstep volume restoration
 - Production App Icon integration
+- Result Rewarded Ads + Replay
 
-# Implemented, Review Pending
+# Result Rewarded Ads + Replay
 
-- Rewarded Result Gate after an official goal completion
-- Result Gate fail-open for unavailable, load, consent, SDK, and presentation failures
-- Explicit fallback to the saved result after an unrewarded ad cancellation
-- Reward-gated replay from ResultView
-- Memory-only replay using the official DailyRun date and seed
-- Replay persistence boundary protecting DailyRun, streak, collectibles, and first diagnosis
-- Exactly-once result/replay transitions
-- Ready-only Result/Replay ad presentation with immediate unavailable outcomes
-- Result fail-open while consent is gathering or ads cannot be requested
-- Existing Continue/Restart load-waiting behavior preserved
+APPROVED
+
+- The official Daily completion is saved before the Result Gate ad flow.
+- A ready Rewarded ad presents before Result; reward transitions to Result.
+- Unavailable, consent-blocked, SDK, and presentation failures fail open to Result.
+- Cancellation before reward returns to the gate with an explicit Result fallback.
+- Replay starts only after reward and uses the same day, seed, and maze.
+- Replay uses memory-only `RunSessionMode.replay`; the SwiftData schema is unchanged.
+- Replay does not mutate the official `DailyRun`, completion, streaks, total completed days, keepsake/collection, first diagnosis, or saved official axes/result.
+- `RewardedGateState` and `RewardedAdSession` prevent duplicate Result transitions and Replay starts.
+- Result/Replay use a ready-only ad path; existing Continue/Restart load-waiting behavior remains unchanged.
 
 Latest validation:
 
 - Unit Tests: 68 PASS (existing 63 plus 5 review-fix tests)
 - Debug Build: PASS
 - Release Generic iOS Device Build: PASS
-- First Visual QA: PASS at 320x568pt for Result Gate and ResultView replay action
-- Google test ad presentation: pending device/simulator network-dependent manual confirmation
+- Google official test Rewarded presentation: PASS
+- Result Gate reward, cancellation/fallback, and Result transition: PASS
+- Dismissal reload: PASS
+- Replay CTA, reward, same-day/same-seed maze, gameplay reset, and transient result: PASS
 
 # Repository
 
@@ -94,24 +98,26 @@ Integrated and APPROVED
 
 # Release Blockers
 
-- Result Rewarded Ads + Replay review-fix exact-SHA review is pending.
-- Apple Developer Bundle ID alignment has not been verified.
-- App Store Connect Bundle ID alignment has not been verified.
-- AdMob Bundle ID alignment has not been verified.
-- A signed Archive and validation have not been performed.
-- App Store Connect submission information is incomplete.
+- Apple Developer App ID / Bundle ID alignment verification
+- App Store Connect app record / Bundle ID alignment verification
+- AdMob app Bundle ID alignment verification
+- Signed Archive
+- App Store validation / upload
+- App Store Connect metadata / privacy / screenshots
+- Territory/privacy configuration as applicable
+- StoreKit remove-ads exposure/configuration decision
 
 # Next Work Unit
 
-Result Rewarded Ads + Replay Review Fix Gate
+Release External Alignment / Submission Readiness
 
-Status: READY FOR REVIEW
+Status: READY
 
-Specification: `docs/RESULT_REWARDED_ADS_REPLAY_SPEC.md`
-
-1. Review the exact review-fix commit produced by this work unit.
-2. Confirm Google official test-ad presentation, reward, cancellation, and dismissal reload when the network environment permits.
-3. Verify the Replay start and Replay result flow on a physical device.
+1. Verify Apple Developer App ID and Bundle ID alignment.
+2. Verify the App Store Connect app record and AdMob Bundle ID alignment.
+3. Complete a signed Archive, validation, and upload.
+4. Complete App Store Connect metadata, privacy, screenshots, and applicable territory settings.
+5. Decide StoreKit remove-ads exposure/configuration for release.
 
 # Do Not Start
 
