@@ -12,9 +12,9 @@ Latest reviewed implementation/config commit:
 `135b101b94704bfa8cdc6911227ef8a5db8cf35a`
 
 State Snapshot:
-`bfcd2a8c45d39ea0ac935696474fec144e67f700`
+`8ce815b954034d6cbd290715677d8203b578c54a`
 
-Review target: none (completed)
+Review target: Gameplay Visibility Fix specification-sync commit produced by this work unit
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -25,9 +25,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: Release External Alignment / Submission Readiness
+Current work unit: Gameplay Visibility Fix — Camera Bounds + Single Tile Set
 
-Current work unit status: NOT STARTED
+Current work unit status: SPEC READY / IMPLEMENTATION NOT STARTED
 
 Continuity: Ready
 
@@ -96,8 +96,28 @@ Integrated and APPROVED
 - No white margin, double-rounded corners, or unintended crop
 - Traveler and lantern readability confirmed at small size
 
+# Gameplay Visibility Fix
+
+SPEC READY / IMPLEMENTATION NOT STARTED
+
+Release-blocking user QA findings:
+
+- Map-edge camera/viewport behavior can push the player, nearby path, or goal outside the useful visible area.
+- Multiple floor/wall source textures reduce immediate passable/impassable recognition.
+
+Approved specification direction:
+
+- Use a viewport-aware camera clamp across the center, four edges, and four corners.
+- Recalculate camera bounds when the SpriteKit viewport changes and validate the complete SwiftUI/SpriteKit crop.
+- Use `MazeFloor` as the single floor texture and `MazeWall` as the single wall texture for v1.0.
+- Keep unused variant assets for rollback; do not change maze generation, Fog of War, topology, collision, or gameplay rules.
+
+Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
+
 # Release Blockers
 
+- Map-edge camera/viewport visibility bug
+- Floor/wall texture readability issue
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -109,19 +129,19 @@ Integrated and APPROVED
 
 # Next Work Unit
 
-Release External Alignment / Submission Readiness
+Gameplay Visibility Fix Implementation
 
-Status: READY
+Status: SPEC READY / IMPLEMENTATION NOT STARTED
 
-1. Verify Apple Developer App ID and Bundle ID alignment.
-2. Verify the App Store Connect app record and AdMob Bundle ID alignment.
-3. Complete a signed Archive, validation, and upload.
-4. Complete App Store Connect metadata, privacy, screenshots, and applicable territory settings.
-5. Decide StoreKit remove-ads exposure/configuration for release.
+1. Implement viewport-aware camera bounds and size-change handling.
+2. Fix gameplay rendering to the `MazeFloor` / `MazeWall` single tile set.
+3. Run focused/full tests and Debug/Release builds.
+4. Complete small/standard iPhone visual QA at the center, four edges, and four corners.
+5. Complete Human Gate and exact SHA review.
 
 # Do Not Start
 
-- New game features outside the approved Result Rewarded Ads + Replay work unit
+- New game features outside the active Gameplay Visibility Fix work unit
 - Banner ads
 - Interstitial ads
 - App Open ads
