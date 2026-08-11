@@ -9,25 +9,26 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
+`135b101b94704bfa8cdc6911227ef8a5db8cf35a`
 
 State Snapshot:
 `d451969ce538a9f7ea6165389da32c17f6d0719c`
 
-Review target: none / completed
+Review target: `f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
-- Human device QA: PASS
+- Gameplay Visibility Fix code review: PASS
+- Gameplay Visibility Fix subsequent Human device QA: FAIL — bottom boundary clipping reproduced
 - Unit Tests: 83 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: Gameplay Visibility Fix — Camera Bounds + Single Tile Set
+Current work unit: Gameplay Visibility Fix — Review Fix
 
-Current work unit status: APPROVED
+Current work unit status: SPEC READY / FIX IMPLEMENTATION NOT STARTED
 
 Continuity: Ready
 
@@ -44,7 +45,6 @@ Continuity: Ready
 - Footstep volume restoration
 - Production App Icon integration
 - Result Rewarded Ads + Replay
-- Gameplay Visibility Fix — Camera Bounds + Single Tile Set
 
 # Result Rewarded Ads + Replay
 
@@ -99,7 +99,14 @@ Integrated and APPROVED
 
 # Gameplay Visibility Fix
 
-APPROVED
+FIX REQUIRED
+
+Approval history:
+
+- Implementation `f6a35a3239a9fc307a835a60ff4c2bb24f598cbd` passed code review.
+- Initial Human QA was reported PASS and receipt `69563123adfe7f39e2a3e56e2716789578b81871` recorded approval.
+- Subsequent physical-device screenshot evidence reproduced clipping at the bottom SpriteView/HUD boundary.
+- The previous Final Approval is REVOKED / superseded. Its historical receipt remains in `docs/REVIEW_LOG.md`.
 
 Confirmed causes:
 
@@ -126,18 +133,27 @@ Validation:
 - Bottom-right goal approach: traveler, goal flag, adjacent floor, and walls fully visible in SpriteView evidence
 - Full `MazePlayView` evidence confirms header/HUD remain separate from the SpriteKit viewport
 - ChatGPT exact SHA code review: PASS
-- Human physical-device QA: PASS for center, four edges, four corners, and bottom goal visibility
+- Subsequent Human physical-device camera QA: FAIL
 - Human floor/wall readability QA: PASS
 
-Resolved release blockers:
+Current component status:
 
-- Map-edge camera/viewport visibility
-- Floor/wall readability
+- Camera visibility: FIX REQUIRED
+- Floor/wall single-texture rendering: PASS / retained
+- Floor/wall readability blocker: resolved
+
+Required review-fix acceptance:
+
+- Define a screen-space `gameplaySafeRect` inside the actual visible SpriteView bounds.
+- Project complete player and visible nearby-goal sprite frames into view coordinates.
+- Assert those frames, plus necessary adjacent tile context, remain inside the safe rectangle.
+- Add actual scene/view integration tests and new full `MazePlayView` evidence showing the HUD boundary.
 
 Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
+- Map-edge / SpriteView boundary clipping
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -149,20 +165,19 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Next Work Unit
 
-Release External Alignment / Submission Readiness
+Gameplay Visibility Fix — Review Fix Implementation
 
-Status: READY
+Status: SPEC READY / IMPLEMENTATION NOT STARTED
 
-1. Verify Apple Developer App ID and production Bundle ID alignment.
-2. Verify the App Store Connect app record and Bundle ID alignment.
-3. Verify the AdMob app Bundle ID alignment.
-4. Decide and configure StoreKit remove-ads exposure for submission.
-5. Produce a signed Archive and complete App Store validation/upload.
-6. Complete metadata, privacy, screenshots, and territory configuration.
+1. Implement the screen-space gameplay safe frame and sprite-bounds acceptance.
+2. Add actual MazeScene/SKView integration tests and a full `MazePlayView` regression.
+3. Run full tests and Debug/Release builds.
+4. Capture new required visual evidence.
+5. Complete exact-SHA review and a new Human Gate before restoring approval.
 
 # Do Not Start
 
-- New game features during v1.0 release readiness
+- New game features outside the active Gameplay Visibility Fix review fix
 - Banner ads
 - Interstitial ads
 - App Open ads

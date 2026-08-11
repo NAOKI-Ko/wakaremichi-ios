@@ -212,3 +212,38 @@ Notes:
 
 - The Gameplay Visibility Fix is final-approved.
 - The next work unit is Release External Alignment / Submission Readiness.
+
+## 2026-08-12 — Gameplay Visibility Fix Correction / Approval Revocation
+
+Prior Final Review Receipt Commit:
+`69563123adfe7f39e2a3e56e2716789578b81871`
+
+Implementation under review:
+`f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
+
+Correction:
+
+- Subsequent physical-device screenshot evidence contradicted the previous visual conclusion.
+- Maze cells near the bottom remain clipped at the SpriteView/HUD boundary.
+- The camera visibility acceptance criteria are not met.
+- The prior Final Approval is superseded / REVOKED; its receipt above remains unchanged as audit history.
+
+Current decision:
+
+- Code review of `f6a35a3…`: PASS
+- Floor/wall single-texture rendering: PASS / retained
+- Camera visibility: FIX REQUIRED
+- Map-edge / SpriteView boundary clipping blocker: reopened
+- Current valid latest reviewed implementation/config: `135b101b94704bfa8cdc6911227ef8a5db8cf35a`
+
+Required correction:
+
+- Define a gameplay safe frame in the actual visible SpriteView coordinate space.
+- Validate complete projected player and nearby-goal sprite frames rather than tile centers or camera bounds alone.
+- Add actual MazeScene/SKView integration assertions and new full `MazePlayView` evidence showing the HUD boundary.
+
+Status:
+
+- Review Fix specification: ready
+- Review Fix implementation: pending
+- Final Approval: not restored
