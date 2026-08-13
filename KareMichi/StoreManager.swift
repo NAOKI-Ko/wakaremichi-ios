@@ -17,6 +17,13 @@ final class StoreManager {
     /// App Store Connect で作成する Non-Consumable 製品のID(仮)
     nonisolated static let removeAdsProductID = "com.karemichi.removeads"
 
+    /// v1.0では購入導線を公開しない。将来のrelease用StoreKit基盤と既存entitlementは保持する。
+    nonisolated static let isRemoveAdsPurchaseVisibleInV1 = false
+
+    nonisolated static func shouldShowRemoveAdsPurchaseCTA(hasLockedRuns: Bool) -> Bool {
+        isRemoveAdsPurchaseVisibleInV1 && hasLockedRuns
+    }
+
     /// 購入状態による分岐をStoreKit Sandboxなしでも検証できる純粋関数。
     nonisolated static func remainingAdActions(isPurchased: Bool,
                                                replayCount: Int,

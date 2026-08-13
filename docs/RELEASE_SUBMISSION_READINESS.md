@@ -2,7 +2,9 @@
 
 Audit date: 2026-08-13 (Asia/Tokyo)
 
-Repository snapshot: `ecab58b8e110b9a3790f8331b3ccc399c2cbd521`
+State Snapshot base: `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
+
+Review target: this work unit's new implementation commit (exact-SHA review pending)
 
 Latest reviewed implementation/config: `a03c0c36d5c95b113c316a4c4c26948582859f14`
 
@@ -21,15 +23,13 @@ Official requirement references used for the checklist:
 
 ## Executive finding
 
-The reviewed game implementation and unsigned Release build baseline remain intact, but this snapshot is not yet ready for a signed archive or App Store submission.
+The reviewed game implementation and unsigned Release build baseline remain intact. The local privacy and v1 StoreKit disposition work is implemented and validated, but this snapshot is not yet ready for a signed archive or App Store submission.
 
 Release-blocking local findings:
 
-1. The app uses `@AppStorage`, which accesses `UserDefaults`, but the app target has no `PrivacyInfo.xcprivacy`. Apple requires app code that uses a required-reason API to declare an approved reason in the app's own privacy manifest.
-2. UMP updates consent at launch and gates ad requests with `canRequestAds`, but the app has no user-facing privacy-options re-entry point when UMP reports that one is required.
-3. This Mac currently reports zero valid code-signing identities, and no Wakaremichi signed archive exists.
-4. The remove-ads purchase UI is exposed, while `com.karemichi.removeads` is explicitly documented in source as provisional and no restore-purchases UI calls `StoreManager.restore()`.
-5. Required App Store metadata, a public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
+1. This Mac currently reports zero valid code-signing identities, and no Wakaremichi signed archive exists.
+2. Required App Store metadata, a public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
+3. The new app Privacy Manifest, UMP privacy-options re-entry, and v1 purchase-UI disposition have passed local validation but still require exact-SHA review before approval.
 
 ## Readiness matrix
 
@@ -84,27 +84,27 @@ Release-blocking local findings:
 | AdMob app record / iOS Bundle ID | AdMob | App record linked to `com.naoki.wakaremichi` | Dashboard not inspected | UNVERIFIED | No external evidence | Verify exact Bundle ID and app linkage | Ad Operations |
 | Production Rewarded unit | AdMob | ID exists under the correct app | Dashboard not inspected | UNVERIFIED | Local ID alone is insufficient | Verify unit ownership/status | Ad Operations |
 | Privacy & messaging configuration | AdMob | Required regional messages published | Dashboard not inspected | UNVERIFIED | UMP code cannot prove dashboard messages | Verify GDPR/US-state messages for selected territories | Privacy / Ad Operations |
-| UMP privacy-options re-entry | Git/source + UMP runtime | Visible entry point only when UMP says it is required | No `privacyOptionsRequirementStatus` or `presentPrivacyOptionsForm` path | BLOCKED | Repository search; Google UMP guidance | Add a scoped privacy-options entry point before applicable territory release | Engineering / Privacy |
+| UMP privacy-options re-entry | Git/source + UMP runtime | Visible entry point only when UMP says it is required | Implemented in Collection; `.required` visible, `.notRequired`/`.unknown` hidden; safe form presentation | PASS | `PrivacyOptionsManager`; `CollectionPrivacyOptionsControl`; tests and visual render | Exact-SHA review, then regional device QA | Engineering / Privacy |
 
 ### StoreKit
 
 | Item | Source of Truth | Expected | Current | Status | Evidence | Required Action | Owner |
 |---|---|---|---|---|---|---|---|
 | Product identifier | Git + App Store Connect | Final non-consumable ID if published | `com.karemichi.removeads`; source comments call it provisional | PASS | `StoreManager.swift` | Do not rename automatically; verify/create exact product if option A is chosen | Product / Engineering |
-| Purchase UI exposure | Git/source | Consistent with v1 product decision | Exposed after more than seven runs in Collection | PASS | `CollectionView.unlockBanner` | Human must choose publish or hide | Product |
+| Purchase UI exposure | Git/source | Consistent with v1 product decision B | Hidden in v1.0 even after more than seven runs | PASS | `StoreManager.shouldShowRemoveAdsPurchaseCTA`; Collection render test | Preserve until a separately reviewed future release | Product |
 | Product-unavailable behavior | Git/source | No crash; no unusable purchase attempt | Product load error leaves product nil and disables purchase button | PASS | `StoreManager.refresh`; disabled button | Add reviewer-facing clarity if purchase remains exposed | Engineering / Product |
 | Purchase / entitlement | Git/source | Verified transaction; durable entitlement | StoreKit 2 verification, current entitlements, updates listener | PASS | `StoreManager.swift` | Sandbox-test after product setup | Engineering / QA |
-| Restore purchases UI | Git/source | User-accessible restore for a restorable purchase | `restore()` exists but no UI calls it | MISSING | Repository search | Add a scoped restore entry point if remove-ads ships | Engineering |
+| Restore purchases UI | Git/source | Not exposed while purchase UI is hidden in v1.0 | `restore()` infrastructure retained; no public purchase or restore entry point | PASS | Repository search and StoreManager tests | Add purchase and restore UI together if remove-ads ships later | Engineering |
 | Entitlement effects | Git/source | Purchased state removes ad gates and unlocks all records | Bypasses result/replay/continue/restart ads; removes collection limit | PASS | `GameView`, `ResultView`, `CollectionView` | Sandbox-test all branches | QA |
 | App Store Connect product | App Store Connect | Configured non-consumable if published | Dashboard not inspected | UNVERIFIED | No external evidence | Verify product, price, localization, review screenshot/status | Account Holder / Product |
-| v1 remove-ads disposition | Human product decision | A: publish and fully configure; or B: hide for v1 | No final decision in Git/Notion evidence read by this audit | HUMAN DECISION | Provisional ID plus live UI | Record decision before archive; do not submit current ambiguous state | Product Owner |
-| Submission with current StoreKit state | App + App Store Connect | UI and external product are mutually consistent | Product is unverified and restore UI is absent | BLOCKED | Combined findings above | Resolve the human decision and resulting release work unit | Product / Engineering |
+| v1 remove-ads disposition | Human product decision | B: hide for v1 | Decision B implemented; product ID/infrastructure retained | PASS | Product decision and v1 visibility gate | Do not expose without a separately reviewed work unit | Product Owner |
+| Submission with current StoreKit state | App + App Store Connect | No reachable purchase flow in v1 | Purchase CTA hidden; existing entitlement effects preserved | PASS | Collection visual QA and entitlement non-regression tests | App Store Connect product is not a v1 blocker while UI remains hidden | Product / Engineering |
 
 ### Privacy
 
 | Item | Source of Truth | Expected | Current | Status | Evidence | Required Action | Owner |
 |---|---|---|---|---|---|---|---|
-| App privacy manifest | Git/Apple requirement | App-owned required-reason API use declared | No app `PrivacyInfo.xcprivacy`; app uses `@AppStorage`/UserDefaults | BLOCKED | `GameView.swift`; repository search; Apple required-reason API guidance | Add app manifest with the accurate approved UserDefaults reason and validate archive privacy report | Engineering / Privacy |
+| App privacy manifest | Git/Apple requirement | App-owned required-reason API use declared | App manifest declares only UserDefaults reason `CA92.1`; built product contains it | PASS | `PrivacyInfo.xcprivacy`; app resource phase; bundle test | Reconfirm in signed archive privacy report | Engineering / Privacy |
 | Third-party privacy manifests | Resolved SDK artifacts | Valid manifests embedded with listed SDKs | GoogleMobileAds and UMP Release frameworks each contain `PrivacyInfo.xcprivacy` | PASS | local Release product and SPM artifacts | Reconfirm in signed archive privacy report | Engineering |
 | ATT | Git/source/plist | No prompt unless the product intentionally requests tracking permission | No AppTrackingTransparency use or tracking usage description | PASS | repository and plist search | Do not add by inference; reconcile ad configuration with privacy answers | Product / Privacy |
 | UMP launch consent gate | Git/source | Update each launch, show required form, gate requests | Implemented; failures do not crash and ads require `canRequestAds` | PASS | `KareMichiApp`; `GoogleMobileAdsProvider` | Complete regional QA and dashboard configuration | QA / Privacy |
@@ -130,13 +130,12 @@ Release-blocking local findings:
 
 Archive prerequisites, in order:
 
-1. Resolve StoreKit v1 disposition.
-2. Add and validate the app privacy manifest and required UMP privacy-options entry point.
-3. Verify Apple Developer App ID, team, capabilities, certificate, and managed provisioning.
-4. Verify App Store Connect app record and AdMob app linkage.
-5. Complete privacy policy, App Privacy answers, metadata, screenshots, age rating, release method, and territories.
-6. Restore a valid Apple Distribution signing identity on the archive Mac.
-7. Create a signed Release archive, generate/review its privacy report, validate, upload, and associate the build.
+1. Complete exact-SHA review of the implemented privacy/StoreKit-v1 work unit.
+2. Verify Apple Developer App ID, team, capabilities, certificate, and managed provisioning.
+3. Verify App Store Connect app record and AdMob app linkage.
+4. Complete privacy policy, App Privacy answers, metadata, screenshots, age rating, release method, and territories.
+5. Restore a valid Apple Distribution signing identity on the archive Mac.
+6. Create a signed Release archive, generate/review its privacy report, validate, upload, and associate the build.
 
 ### Metadata, Screenshots, Territory, and Submission
 
@@ -184,10 +183,10 @@ Archive prerequisites, in order:
 
 ### StoreKit
 
-- [ ] Human decision recorded: publish remove-ads in v1 or hide it.
-- [ ] If published: exact product ID exists, localization/price/review material are complete, purchase and restore are Sandbox-tested, and ad-removal/collection entitlement branches pass.
-- [ ] If hidden: a separately reviewed implementation work unit removes the live purchase exposure without changing the product ID by inference.
+- [x] Human decision B recorded and implemented: remove-ads purchase UI is hidden for v1.0.
+- [x] Provisional product ID, StoreManager purchase/restore infrastructure, and existing entitlement behavior remain intact.
+- [ ] If published in a future version: complete product configuration and expose reviewed purchase and restore entry points together.
 
 ## Stop condition
 
-Do not start a signed archive or App Store submission from this snapshot. The recommended next work unit is **v1.0 Privacy Manifest + UMP Privacy Options + StoreKit Release Decision**, followed by **External Dashboard Alignment + Signed Archive/Validation**.
+Do not start a signed archive or App Store submission from this snapshot. First complete exact-SHA review of this implementation, then proceed to **External Dashboard Alignment + Signed Archive/Validation**. Apple Developer, App Store Connect, and AdMob remain externally `UNVERIFIED`; no external dashboard was changed by this work unit.

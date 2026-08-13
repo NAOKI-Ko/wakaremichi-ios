@@ -8,6 +8,7 @@ struct CollectionView: View {
     @Query(sort: \DailyRun.date, order: .reverse) private var allRuns: [DailyRun]
     @Environment(\.dismiss) private var dismiss
     @State private var store = StoreManager.shared
+    @State private var privacyOptions = PrivacyOptionsManager.shared
 
     @State private var selected: DailyRun?
 
@@ -48,11 +49,13 @@ struct CollectionView: View {
                         keepsakeShelf
                         summaryRow
                         grid
-                        if hasLockedRuns {
+                        if StoreManager.shouldShowRemoveAdsPurchaseCTA(hasLockedRuns: hasLockedRuns) {
                             unlockBanner
                         }
                     }
                 }
+
+                CollectionPrivacyOptionsControl(manager: privacyOptions)
             }
         }
         .sheet(item: $selected) { run in
@@ -60,6 +63,9 @@ struct CollectionView: View {
                                  currentStreak: streak(on: run)) {
                 selected = nil
             }
+        }
+        .onAppear {
+            privacyOptions.refreshRequirement()
         }
     }
 
@@ -225,6 +231,52 @@ struct CollectionView: View {
         }
         .padding(.horizontal, 30)
         .padding(.bottom, 30)
+    }
+}
+
+// MARK: - Privacy options
+
+struct CollectionPrivacyOptionsControl: View {
+
+    @Bindable var manager: PrivacyOptionsManager
+
+    var body: some View {
+        if manager.isVisible {
+            VStack(spacing: 5) {
+                Button {
+                    GameAudio.shared.play(.uiTap)
+                    Task { await manager.presentPrivacyOptions() }
+                } label: {
+                    HStack(spacing: 6) {
+                        if manager.isPresenting {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(.white.opacity(0.55))
+                        }
+                        Image(systemName: "hand.raised")
+                        Text("プライバシー設定")
+                    }
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.48))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Palette.surfaceSUI.opacity(0.42), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(manager.isPresenting)
+                .accessibilityIdentifier("privacyOptionsButton")
+
+                if let errorMessage = manager.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.35))
+                        .accessibilityIdentifier("privacyOptionsError")
+                }
+            }
+            .padding(.top, 6)
+            .padding(.bottom, 10)
+            .accessibilityIdentifier("privacyOptionsControl")
+        }
     }
 }
 

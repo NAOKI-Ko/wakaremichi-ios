@@ -8,6 +8,155 @@ import XCTest
 
 final class MazeGameTests: XCTestCase {
 
+    func testAppPrivacyManifestIsBundledWithOnlyUserDefaultsReason() throws {
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "PrivacyInfo",
+                                                 withExtension: "xcprivacy"))
+        let data = try Data(contentsOf: url)
+        let plist = try XCTUnwrap(PropertyListSerialization.propertyList(from: data,
+                                                                          format: nil)
+            as? [String: Any])
+        let entries = try XCTUnwrap(plist["NSPrivacyAccessedAPITypes"]
+            as? [[String: Any]])
+
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertEqual(entries.first?["NSPrivacyAccessedAPIType"] as? String,
+                       "NSPrivacyAccessedAPICategoryUserDefaults")
+        XCTAssertEqual(entries.first?["NSPrivacyAccessedAPITypeReasons"] as? [String],
+                       ["CA92.1"])
+    }
+
+    @MainActor
+    func testRequiredPrivacyOptionsAreVisible() {
+        let manager = PrivacyOptionsManager(requirementReader: { .required },
+                                            formPresenter: {})
+        manager.refreshRequirement()
+
+        XCTAssertEqual(manager.requirement, .required)
+        XCTAssertTrue(manager.isVisible)
+    }
+
+    @MainActor
+    func testNotRequiredPrivacyOptionsAreHidden() {
+        let manager = PrivacyOptionsManager(requirementReader: { .notRequired },
+                                            formPresenter: {})
+        manager.refreshRequirement()
+
+        XCTAssertEqual(manager.requirement, .notRequired)
+        XCTAssertFalse(manager.isVisible)
+    }
+
+    @MainActor
+    func testUnknownPrivacyOptionsAreHidden() {
+        let manager = PrivacyOptionsManager(requirementReader: { .unknown },
+                                            formPresenter: {})
+        manager.refreshRequirement()
+
+        XCTAssertEqual(manager.requirement, .unknown)
+        XCTAssertFalse(manager.isVisible)
+    }
+
+    @MainActor
+    func testPrivacyOptionsFormPresentationSuccessIsReported() async {
+        var presentationCount = 0
+        let manager = PrivacyOptionsManager(
+            requirementReader: { .required },
+            formPresenter: { presentationCount += 1 }
+        )
+        manager.refreshRequirement()
+
+        let didPresent = await manager.presentPrivacyOptions()
+
+        XCTAssertTrue(didPresent)
+        XCTAssertEqual(presentationCount, 1)
+        XCTAssertFalse(manager.isPresenting)
+        XCTAssertNil(manager.errorMessage)
+    }
+
+    @MainActor
+    func testPrivacyOptionsFormPresentationFailureIsSafe() async {
+        let manager = PrivacyOptionsManager(
+            requirementReader: { .required },
+            formPresenter: {
+                throw NSError(domain: "PrivacyOptionsTest", code: 1)
+            }
+        )
+        manager.refreshRequirement()
+
+        let didPresent = await manager.presentPrivacyOptions()
+
+        XCTAssertFalse(didPresent)
+        XCTAssertFalse(manager.isPresenting)
+        XCTAssertNotNil(manager.errorMessage)
+        XCTAssertTrue(manager.isVisible)
+    }
+
+    func testV1RemoveAdsPurchaseCTAIsHiddenWhileEntitlementHelpersRemain() {
+        XCTAssertFalse(StoreManager.isRemoveAdsPurchaseVisibleInV1)
+        XCTAssertFalse(StoreManager.shouldShowRemoveAdsPurchaseCTA(hasLockedRuns: true))
+        XCTAssertFalse(StoreManager.shouldShowRemoveAdsPurchaseCTA(hasLockedRuns: false))
+
+        XCTAssertEqual(StoreManager.remainingAdActions(isPurchased: true,
+                                                       replayCount: 999,
+                                                       restartCount: 999),
+                       Int.max)
+        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: true))
+        XCTAssertEqual(StoreManager.removeAdsProductID, "com.karemichi.removeads")
+    }
+
+    @MainActor
+    func testRequiredPrivacyOptionsControlRendersWithoutLayoutFailure() throws {
+        let manager = PrivacyOptionsManager(requirementReader: { .required },
+                                            formPresenter: {})
+        manager.refreshRequirement()
+
+        let control = ZStack {
+            Palette.backgroundSUI
+            CollectionPrivacyOptionsControl(manager: manager)
+        }
+        .frame(width: 390, height: 100)
+
+        try renderVisual(control,
+                         size: CGSize(width: 390, height: 100),
+                         name: "Required privacy options control",
+                         path: "/tmp/KareMichi-privacy-options-required.png")
+    }
+
+    @MainActor
+    func testCollectionWithLockedHistoryRendersWithoutV1PurchaseUI() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: DailyRun.self, configurations: configuration)
+        let context = container.mainContext
+        let calendar = Calendar(identifier: .gregorian)
+        let today = DailySeed.startOfDay(for: Date(), calendar: calendar)
+
+        for offset in 0..<8 {
+            var log = RunLog()
+            log.path = [Coord(x: 1, y: 1)]
+            log.reachedGoal = true
+            log.openCellCount = 1
+            let date = try XCTUnwrap(calendar.date(byAdding: .day,
+                                                   value: -offset,
+                                                   to: today))
+            context.insert(DailyRun(date: date,
+                                    seed: 20_260_800 - offset,
+                                    log: log,
+                                    axes: .neutral,
+                                    traveler: .wanderer,
+                                    moodBefore: nil,
+                                    fogFeedback: nil))
+        }
+        try context.save()
+
+        let collection = CollectionView()
+            .modelContainer(container)
+            .frame(width: 390, height: 844)
+
+        try renderVisual(collection,
+                         size: CGSize(width: 390, height: 844),
+                         name: "Collection without v1 purchase UI",
+                         path: "/tmp/KareMichi-collection-v1-no-purchase.png")
+    }
+
     func testAllTwelveAudioFilesAreBundledAndDecodable() throws {
         let names = [
             "ambient_wind_loop20s", "bgm_musicbox_v4", "sfx_bump",

@@ -30,6 +30,7 @@
 		C0000000000000000000001B /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* StoreManager.swift */; };
 		C0000000000000000000001C /* GoogleMobileAdsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001D /* GoogleMobileAdsProvider.swift */; };
 		C0000000000000000000001D /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = M00000000000000000000001 /* GoogleMobileAds */; };
+		C0000000000000000000001E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001F /* PrivacyInfo.xcprivacy */; };
 		C00000000000000000000020 /* ambient_wind_loop20s.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000020 /* ambient_wind_loop20s.wav */; };
 		C00000000000000000000021 /* bgm_musicbox_v4.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000021 /* bgm_musicbox_v4.wav */; };
 		C00000000000000000000022 /* sfx_bump.wav in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000022 /* sfx_bump.wav */; };
@@ -79,6 +80,7 @@
 		A0000000000000000000001C /* SPEC_diagnosis_v2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = SPEC_diagnosis_v2.md; sourceTree = "<group>"; };
 		A0000000000000000000001D /* GoogleMobileAdsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMobileAdsProvider.swift; sourceTree = "<group>"; };
 		A0000000000000000000001E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A0000000000000000000001F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A00000000000000000000020 /* ambient_wind_loop20s.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ambient_wind_loop20s.wav; sourceTree = "<group>"; };
 		A00000000000000000000021 /* bgm_musicbox_v4.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = bgm_musicbox_v4.wav; sourceTree = "<group>"; };
 		A00000000000000000000022 /* sfx_bump.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sfx_bump.wav; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				A0000000000000000000001B /* StoreManager.swift */,
 				A0000000000000000000001C /* SPEC_diagnosis_v2.md */,
 				A0000000000000000000001E /* Info.plist */,
+				A0000000000000000000001F /* PrivacyInfo.xcprivacy */,
 				D00000000000000000000005 /* Audio */,
 				A00000000000000000000010 /* Assets.xcassets */,
 			);
@@ -278,6 +281,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C00000000000000000000010 /* Assets.xcassets in Resources */,
+				C0000000000000000000001E /* PrivacyInfo.xcprivacy in Resources */,
 				C00000000000000000000020 /* ambient_wind_loop20s.wav in Resources */,
 				C00000000000000000000021 /* bgm_musicbox_v4.wav in Resources */,
 				C00000000000000000000022 /* sfx_bump.wav in Resources */,

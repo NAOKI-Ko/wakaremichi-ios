@@ -11,24 +11,24 @@ v1.0 Release Candidate
 Latest reviewed implementation/config commit:
 `a03c0c36d5c95b113c316a4c4c26948582859f14`
 
-State Snapshot:
-`ecab58b8e110b9a3790f8331b3ccc399c2cbd521`
+State Snapshot base:
+`b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
 
-Review target: none / implementation completed
+Review target: this work unit's new implementation commit
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
 - Gameplay Visibility Fix code review: PASS
 - Gameplay Visibility Fix new Human physical-device QA: PASS
-- Unit Tests: 90 PASS / FAIL 0
+- Unit Tests: 99 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: v1.0 Release External Alignment / Submission Readiness
+Current work unit: v1.0 Privacy Manifest + UMP Privacy Options + Hide Remove-Ads
 
-Current work unit status: AUDIT COMPLETE / EXTERNAL VERIFICATION PENDING
+Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -45,6 +45,31 @@ Continuity: Ready
 - Footstep volume restoration
 - Production App Icon integration
 - Result Rewarded Ads + Replay
+- App-owned Privacy Manifest
+- UMP privacy-options re-entry
+- v1.0 remove-ads purchase UI hiding
+
+# v1.0 Privacy Release Requirements
+
+IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+
+- The app-owned `PrivacyInfo.xcprivacy` declares only `NSPrivacyAccessedAPICategoryUserDefaults` with approved reason `CA92.1` for app-only `@AppStorage` / `UserDefaults` use.
+- No app-owned file timestamp, system boot time, disk space, or active-keyboard category was found or declared.
+- The manifest is an app-target resource and is present at the root of the built app bundle.
+- Collection is the stable privacy/settings surface. Its privacy-options entry point is visible only while UMP reports `.required`; `.notRequired` and `.unknown` remain hidden.
+- The privacy-options form uses UMP's current `presentPrivacyOptionsForm` path. Presentation errors are handled without a crash, and the existing launch consent / `canRequestAds` / Rewarded gating semantics are unchanged.
+- Human StoreKit decision B is implemented: the v1.0 remove-ads purchase CTA is hidden.
+- `com.karemichi.removeads`, `StoreManager`, purchase/restore infrastructure, and purchased-entitlement effects remain intact for a future release and existing entitled users.
+- SwiftData schema is unchanged.
+
+Validation:
+
+- Unit Tests: 99 PASS / FAIL 0 / SKIP 0
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned clean build: PASS
+- Built-product privacy manifest validation: PASS
+- Privacy-options / Collection visual render QA: PASS
+- Final approval: not recorded; exact-SHA review is pending
 
 # Result Rewarded Ads + Replay
 
@@ -164,10 +189,6 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- App-owned Privacy manifest is missing even though app code uses `@AppStorage` / `UserDefaults`.
-- UMP privacy-options re-entry is not implemented for states where UMP requires it.
-- StoreKit remove-ads is exposed in UI while its product ID is provisional, its App Store Connect product is unverified, and no restore-purchases UI is connected.
-- Human decision is required: publish remove-ads in v1.0 with complete configuration, or hide it in a separately reviewed implementation work unit.
 - Apple Developer App ID, capabilities, Team, distribution certificate, and provisioning alignment are unverified.
 - App Store Connect app record / Bundle ID alignment is unverified.
 - AdMob app Bundle ID, app linkage, Rewarded unit, and Privacy & messaging configuration are unverified.
@@ -178,6 +199,8 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 
 # Next Work Unit
+
+Exact-SHA review of this privacy implementation, then External Dashboard Alignment + Signed Archive / Validation.
 
 v1.0 Privacy Manifest + UMP Privacy Options + StoreKit Release Decision
 

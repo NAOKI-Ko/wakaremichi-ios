@@ -1,6 +1,80 @@
 import GoogleMobileAds
+import Observation
 import UserMessagingPlatform
 import UIKit
+
+enum PrivacyOptionsRequirement: Equatable {
+    case unknown
+    case notRequired
+    case required
+
+    var isVisible: Bool { self == .required }
+}
+
+/// UMPのprivacy options状態と再表示を、SwiftUIとテストから安全に扱う。
+/// SDKの状態がunknownの間は導線を見せず、requiredのときだけ操作を許可する。
+@MainActor
+@Observable
+final class PrivacyOptionsManager {
+    typealias RequirementReader = @MainActor () -> PrivacyOptionsRequirement
+    typealias FormPresenter = @MainActor () async throws -> Void
+
+    static let shared = PrivacyOptionsManager()
+
+    private let requirementReader: RequirementReader
+    private let formPresenter: FormPresenter
+
+    private(set) var requirement: PrivacyOptionsRequirement = .unknown
+    private(set) var isPresenting = false
+    private(set) var errorMessage: String?
+
+    var isVisible: Bool { requirement.isVisible }
+
+    convenience init() {
+        self.init(
+            requirementReader: {
+                switch ConsentInformation.shared.privacyOptionsRequirementStatus {
+                case .required: .required
+                case .notRequired: .notRequired
+                case .unknown: .unknown
+                @unknown default: .unknown
+                }
+            },
+            formPresenter: {
+                try await ConsentForm.presentPrivacyOptionsForm(from: nil)
+            }
+        )
+    }
+
+    init(requirementReader: @escaping RequirementReader,
+         formPresenter: @escaping FormPresenter) {
+        self.requirementReader = requirementReader
+        self.formPresenter = formPresenter
+    }
+
+    func refreshRequirement() {
+        requirement = requirementReader()
+    }
+
+    /// 表示失敗はfalseとして返し、画面を維持する。例外をUIへ伝播させない。
+    @discardableResult
+    func presentPrivacyOptions() async -> Bool {
+        guard requirement == .required, !isPresenting else { return false }
+        isPresenting = true
+        errorMessage = nil
+        defer { isPresenting = false }
+
+        do {
+            try await formPresenter()
+            refreshRequirement()
+            return true
+        } catch {
+            errorMessage = "プライバシー設定を開けませんでした"
+            refreshRequirement()
+            return false
+        }
+    }
+}
 
 /// UMPの同意状態を広告SDKの起動可否へ変換する差し込み口。
 /// 実装はGoogle公式フォームを使い、テストはネットワークなしで差し替えられる。
@@ -25,6 +99,8 @@ final class GoogleMobileAdsConsentProvider: AdConsentProviding {
                 // 同意が必要な地域・状態のときだけ、UMP自身がフォームを表示する。
                 try? await ConsentForm.loadAndPresentIfRequired(from: nil)
             }
+
+            PrivacyOptionsManager.shared.refreshRequirement()
 
             // 更新・フォーム表示に失敗しても、前回セッションの有効な同意があれば許可できる。
             completion(ConsentInformation.shared.canRequestAds)
