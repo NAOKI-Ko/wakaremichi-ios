@@ -49,6 +49,15 @@
 - Kept 05 focused on the complete shelf rather than duplicating 04.
 - Preserved the 4:5 ShareCard aspect ratio on 06 and removed unnecessary internal letterboxing.
 
+### Human Visual Review Fix — Slide 04
+
+- Human Visual Gate passed 01, 02, 03, 05, and 06; those five canonical files were not regenerated or modified.
+- Slide 04 was recaptured from the same deterministic eight-run `CollectionView` fixture at a logical scroll boundary.
+- Its app panel now starts with the fixed「旅の記録」header, followed by the 8 / 8 / 0 summary and all eight dated trail thumbnails.
+- The clipped edge of the preceding keepsake section was removed.
+- The panel ends shortly after the final 8/3 and 8/2 entries, removing the former excessive blank tail.
+- A new contact sheet was built by reading the unchanged five passed files and the new slide 04.
+
 ## Mechanical Validation
 
 - Six canonical files exist: PASS
@@ -65,7 +74,7 @@
 - 01 introduces the world with visible traveler, light, maze, Fog of War, and HUD: PASS
 - 02 communicates play → result with a sufficiently dense, multi-turn trail: PASS
 - 03 communicates self-reflection with a readable four-axis shape and title: PASS
-- 04 communicates continuity with eight distinct completed-day thumbnails: PASS
+- 04 review fix shows the header, 8 / 8 / 0 summary, eight distinct trails, and all dates without preceding-section fragments or excessive bottom blank: PASS (self-review)
 - 05 communicates collection with acquired artwork, locked silhouettes, and 5/8: PASS
 - 06 communicates spoiler-free sharing and contains no maze answer/path/coordinates: PASS
 - Main copy remains readable in the six-up contact sheet: PASS
@@ -73,5 +82,5 @@
 
 ## Gate Status
 
-- App Store Screenshot v2: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
+- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 REVIEW FIX IMPLEMENTED — RE-REVIEW PENDING / 05 PASS / 06 PASS
 - These files are not yet declared final submission-ready.

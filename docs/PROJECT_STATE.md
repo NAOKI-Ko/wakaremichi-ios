@@ -19,11 +19,12 @@ v1.0 Release Candidate
 
 - Direction: B — 世界観 × 習慣化訴求（C — 結果・自己投影訴求を補助）
 - App Store Screenshot v2: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
+- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 REVIEW FIX IMPLEMENTED — RE-REVIEW PENDING / 05 PASS / 06 PASS
 - New v2 raw screenshots: 6
 - Final screenshots: 6
 - Output: 1290 × 2796 px portrait PNG, opaque
 - State Snapshot base: `e6dc821452fc965d647f7223e9229a103d6d51e4`
-- Review Target: `1883953905de640afb06cde22b8ae7eb1f76653f`
+- Review Target: Slide 04 visual-fix commit (exact SHA recorded after asset commit)
 - Plan: `docs/STORE_SCREENSHOT_PLAN.md`
 - Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
 - Contact sheet: `docs/store-assets/contact-sheet-v2.png`
@@ -37,7 +38,7 @@ Latest reviewed implementation/config commit:
 State Snapshot base:
 `e6dc821452fc965d647f7223e9229a103d6d51e4`
 
-Review target: `1883953905de640afb06cde22b8ae7eb1f76653f` (App Store Screenshot v2)
+Review target: Slide 04 visual-fix commit (pending exact SHA)
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -49,9 +50,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: App Store Screenshot Recapture + Marketing Screenshot v2
+Current work unit: App Store Screenshot v2 — Visual Review Fix, Slide 04 only
 
-Current work unit status: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
+Current work unit status: REVIEW FIX IMPLEMENTED / RE-REVIEW PENDING
 
 Continuity: Ready
 
