@@ -345,3 +345,63 @@ Notes:
 
 - Historical initial approval and subsequent revocation entries above remain part of the audit trail.
 - The next work unit is `v1.0 Release External Alignment / Submission Readiness`; it is not started by this receipt.
+
+## 2026-08-13 — Privacy / UMP / StoreKit v1 Hide Final Review Receipt
+
+Work Unit:
+`Privacy Manifest + UMP Privacy Options + StoreKit v1 Hide`
+
+Audit timeline:
+
+1. Release Readiness Audit `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
+2. Initial privacy implementation `d16f9e12f177317efd62886c8bf090b3d2b4ae99`
+3. ChatGPT exact-SHA review: FIX REQUIRED
+4. Finding: the purchase CTA was hidden, but the seven-run Collection limit remained and created an unreachable paywall.
+5. Review Fix `c7e906a7de34a31432daef9e03abc7d2a66c0b8a`
+6. Fix: while the purchase feature is disabled, purchased and unpurchased users both receive unlimited Collection history. The future enabled gate retains unpurchased = 7 and purchased = unlimited.
+7. Unit Tests: 104 PASS / FAIL 0 / SKIP 0
+8. Debug Simulator clean build: PASS
+9. Release Generic iOS Device unsigned build: PASS
+10. `git diff --check`: PASS
+11. Visual QA: PASS
+12. ChatGPT exact-SHA review: PASS
+13. Final decision: FINAL APPROVED / LOCAL RELEASE REQUIREMENTS PASS
+
+Final implementation:
+`c7e906a7de34a31432daef9e03abc7d2a66c0b8a`
+
+Privacy Manifest status: PASS / APPROVED
+
+- App-owned `PrivacyInfo.xcprivacy` is included at the built-product root.
+- It declares only `NSPrivacyAccessedAPICategoryUserDefaults`, with approved reason `CA92.1`.
+- App-owned file timestamp, system boot time, disk space, and active keyboard categories are not declared.
+- Third-party SDK manifests were not copied into the app-owned manifest.
+
+UMP local implementation status: PASS / APPROVED
+
+- `privacyOptionsRequirementStatus` controls visibility: required is visible; notRequired and unknown are hidden.
+- User interaction invokes `presentPrivacyOptionsForm`; presentation failure is safe.
+- Launch consent update, `canRequestAds` gating, and Rewarded behavior remain unchanged.
+- Required/test-geography physical-device privacy-options form presentation remains a Release QA blocker and is not marked PASS by this receipt.
+
+StoreKit v1 decision: PASS / APPROVED
+
+- Human decision B: the v1.0 remove-ads purchase feature is not public.
+- Purchase and restore UI are hidden, and Collection history is unlimited for all v1 users.
+- `com.karemichi.removeads`, StoreManager, product loading, purchase/restore, entitlement listeners, ad bypass, and the future Collection limit remain intact.
+- App Store Connect remove-ads product configuration and restore UI absence are not v1 blockers while purchase UI remains hidden.
+
+Resolved blockers:
+
+- App-owned Privacy Manifest
+- UMP privacy-options local implementation
+- StoreKit v1 product decision
+- Unreachable seven-run Collection paywall
+- Restore UI absence for v1 hidden-purchase scope
+- App Store Connect remove-ads product for v1 hidden-purchase scope
+
+Next Work Unit:
+`v1.0 External Dashboard Alignment + Signing Readiness`
+
+After that:
+`Signed Archive / Validation / Upload`

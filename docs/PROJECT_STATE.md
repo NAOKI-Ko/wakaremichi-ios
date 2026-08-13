@@ -9,12 +9,12 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`a03c0c36d5c95b113c316a4c4c26948582859f14`
+`c7e906a7de34a31432daef9e03abc7d2a66c0b8a`
 
 State Snapshot base:
 `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
 
-Review target: this work unit's new review-fix commit
+Review target: none / implementation completed
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -26,9 +26,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: v1.0 Privacy Manifest + UMP Privacy Options + Hide Remove-Ads
+Current work unit: Privacy Manifest + UMP Privacy Options + StoreKit v1 Hide — Final Review Receipt / State Sync
 
-Current work unit status: REVIEW FIX IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
 
 Continuity: Ready
 
@@ -51,7 +51,7 @@ Continuity: Ready
 
 # v1.0 Privacy Release Requirements
 
-IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+FINAL APPROVED / LOCAL RELEASE REQUIREMENTS PASS
 
 - The app-owned `PrivacyInfo.xcprivacy` declares only `NSPrivacyAccessedAPICategoryUserDefaults` with approved reason `CA92.1` for app-only `@AppStorage` / `UserDefaults` use.
 - No app-owned file timestamp, system boot time, disk space, or active-keyboard category was found or declared.
@@ -64,6 +64,14 @@ IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 - `com.karemichi.removeads`, `StoreManager`, purchase/restore infrastructure, and purchased-entitlement effects remain intact for a future release and existing entitled users.
 - SwiftData schema is unchanged.
 
+Final status:
+
+- Privacy Manifest: PASS / APPROVED
+- UMP privacy-options local implementation: PASS / APPROVED
+- StoreKit v1 hide: PASS / APPROVED
+- Collection history: v1 unlimited / no paywall
+- ChatGPT exact-SHA review of `c7e906a7de34a31432daef9e03abc7d2a66c0b8a`: PASS
+
 Validation:
 
 - Unit Tests: 104 PASS / FAIL 0 / SKIP 0
@@ -71,7 +79,7 @@ Validation:
 - Release Generic iOS Device unsigned clean build: PASS
 - Built-product privacy manifest validation: PASS
 - Privacy-options / Collection visual render QA: PASS
-- Final approval: not recorded; exact-SHA review is pending
+- Final approval: FINAL APPROVED
 
 # Result Rewarded Ads + Replay
 
@@ -194,6 +202,7 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 - Apple Developer App ID, capabilities, Team, distribution certificate, and provisioning alignment are unverified.
 - App Store Connect app record / Bundle ID alignment is unverified.
 - AdMob app Bundle ID, app linkage, Rewarded unit, and Privacy & messaging configuration are unverified.
+- UMP-required geography / test-geography physical-device privacy-options form presentation is not yet verified.
 - This Mac currently has no valid code-signing identity; a Wakaremichi signed Archive does not exist.
 - App Store validation / upload has not been performed.
 - App Store Connect metadata, privacy answers, public privacy/support URLs, submission screenshots, age rating, release method, and territories are incomplete or unverified.
@@ -202,7 +211,9 @@ Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 
 # Next Work Unit
 
-Exact-SHA review of this privacy implementation, then External Dashboard Alignment + Signed Archive / Validation.
+v1.0 External Dashboard Alignment + Signing Readiness.
+
+After that work unit, continue with Signed Archive / Validation / Upload.
 
 # Do Not Start
 

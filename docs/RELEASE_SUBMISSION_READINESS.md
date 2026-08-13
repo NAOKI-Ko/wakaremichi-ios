@@ -4,9 +4,9 @@ Audit date: 2026-08-13 (Asia/Tokyo)
 
 State Snapshot base: `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
 
-Review target: this work unit's new review-fix commit (exact-SHA review pending)
+Review target: none / implementation completed
 
-Latest reviewed implementation/config: `a03c0c36d5c95b113c316a4c4c26948582859f14`
+Latest reviewed implementation/config: `c7e906a7de34a31432daef9e03abc7d2a66c0b8a`
 
 ## Scope and evidence policy
 
@@ -23,13 +23,13 @@ Official requirement references used for the checklist:
 
 ## Executive finding
 
-The reviewed game implementation and unsigned Release build baseline remain intact. The local privacy and v1 StoreKit disposition work is implemented and validated, but this snapshot is not yet ready for a signed archive or App Store submission.
+The reviewed game implementation and unsigned Release build baseline remain intact. The local Privacy Manifest, UMP privacy-options implementation, and v1 StoreKit disposition are FINAL APPROVED. External alignment, metadata, signing, archive, validation, and required-region UMP physical-device QA remain before submission.
 
 Release-blocking local findings:
 
 1. This Mac currently reports zero valid code-signing identities, and no Wakaremichi signed archive exists.
 2. Required App Store metadata, a public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
-3. The app Privacy Manifest and UMP privacy-options implementation remain locally validated. StoreKit decision B now also removes the unreachable Collection history limit while purchase UI is disabled; the review fix still requires exact-SHA review before approval.
+3. UMP privacy-options form presentation still needs physical-device confirmation under a required geography or test geography; local implementation approval does not substitute for that runtime QA.
 
 ## Readiness matrix
 
@@ -84,7 +84,7 @@ Release-blocking local findings:
 | AdMob app record / iOS Bundle ID | AdMob | App record linked to `com.naoki.wakaremichi` | Dashboard not inspected | UNVERIFIED | No external evidence | Verify exact Bundle ID and app linkage | Ad Operations |
 | Production Rewarded unit | AdMob | ID exists under the correct app | Dashboard not inspected | UNVERIFIED | Local ID alone is insufficient | Verify unit ownership/status | Ad Operations |
 | Privacy & messaging configuration | AdMob | Required regional messages published | Dashboard not inspected | UNVERIFIED | UMP code cannot prove dashboard messages | Verify GDPR/US-state messages for selected territories | Privacy / Ad Operations |
-| UMP privacy-options re-entry | Git/source + UMP runtime | Visible entry point only when UMP says it is required | Implemented in Collection; `.required` visible, `.notRequired`/`.unknown` hidden; safe form presentation | PASS | `PrivacyOptionsManager`; `CollectionPrivacyOptionsControl`; tests and visual render | Exact-SHA review, then regional device QA | Engineering / Privacy |
+| UMP privacy-options re-entry | Git/source + UMP runtime | Visible entry point only when UMP says it is required | Local implementation APPROVED: `.required` visible, `.notRequired`/`.unknown` hidden; safe form presentation | PASS | `PrivacyOptionsManager`; `CollectionPrivacyOptionsControl`; 104 tests and visual render | Complete required/test-geography physical-device form QA | Engineering / Privacy |
 
 ### StoreKit
 
@@ -131,9 +131,9 @@ Release-blocking local findings:
 
 Archive prerequisites, in order:
 
-1. Complete exact-SHA review of the implemented privacy/StoreKit-v1 work unit.
-2. Verify Apple Developer App ID, team, capabilities, certificate, and managed provisioning.
-3. Verify App Store Connect app record and AdMob app linkage.
+1. Verify Apple Developer App ID, team, capabilities, certificate, and managed provisioning.
+2. Verify App Store Connect app record and AdMob app linkage.
+3. Complete required/test-geography physical-device UMP privacy-options form QA.
 4. Complete privacy policy, App Privacy answers, metadata, screenshots, age rating, release method, and territories.
 5. Restore a valid Apple Distribution signing identity on the archive Mac.
 6. Create a signed Release archive, generate/review its privacy report, validate, upload, and associate the build.
@@ -152,7 +152,7 @@ Archive prerequisites, in order:
 | App Store screenshots | App Store Connect | Curated screenshots for every required display size | 27 ignored local QA screenshots exist, but no Git-managed submission set or ASC evidence | MISSING | ignored `Screenshots/` and `Screenshots-Restart/` | Select/capture compliant final screens and upload by required size | Design / Marketing |
 | Territory availability | App Store Connect | Human-approved countries/regions | Dashboard not inspected | UNVERIFIED | No external evidence | Select territories and reconcile privacy/UMP obligations | Product / Privacy |
 | Pricing / availability | App Store Connect | Final free/paid availability | Dashboard not inspected | UNVERIFIED | No external evidence | Confirm app price and availability dates | Product |
-| Submission package | App Store Connect | Build + all required metadata ready | Archive, external alignment, privacy, metadata, and StoreKit decision are incomplete | BLOCKED | This matrix | Clear all blockers before Add for Review | Release Manager |
+| Submission package | App Store Connect | Build + all required metadata ready | Archive, external alignment, runtime UMP QA, and metadata remain incomplete; local privacy/StoreKit decision is approved | BLOCKED | This matrix | Clear all remaining blockers before Add for Review | Release Manager |
 | Final submission | App Store Connect | Human-authorized submission | Not performed by this audit | BLOCKED | External mutation intentionally prohibited | Submit only after exact-SHA review and readiness sign-off | Account Holder |
 
 ## External verification checklist
@@ -191,4 +191,4 @@ Archive prerequisites, in order:
 
 ## Stop condition
 
-Do not start a signed archive or App Store submission from this snapshot. First complete exact-SHA review of this implementation, then proceed to **External Dashboard Alignment + Signed Archive/Validation**. Apple Developer, App Store Connect, and AdMob remain externally `UNVERIFIED`; no external dashboard was changed by this work unit.
+Do not start a signed archive or App Store submission from this snapshot. Proceed next to **v1.0 External Dashboard Alignment + Signing Readiness**, then **Signed Archive / Validation / Upload**. Apple Developer, App Store Connect, and AdMob remain externally `UNVERIFIED`; required/test-geography UMP physical-device form QA is still pending, and no external dashboard was changed by this work unit.
