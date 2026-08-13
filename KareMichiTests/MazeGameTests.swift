@@ -1666,6 +1666,73 @@ final class MazeGameTests: XCTestCase {
     }
 
     @MainActor
+    func testVisibleViewportUsesNestedClippingAncestorCoordinates() throws {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 500, height: 700))
+        let outer = UIView(frame: CGRect(x: 50, y: 80, width: 280, height: 360))
+        outer.clipsToBounds = true
+        let inner = UIView(frame: CGRect(x: 30, y: 25, width: 360, height: 440))
+        inner.clipsToBounds = false
+        let fixture = try visibilityScene(target: Coord(x: 25, y: 25),
+                                          frame: CGRect(x: -60, y: -45,
+                                                        width: 390, height: 520))
+
+        root.addSubview(outer)
+        outer.addSubview(inner)
+        inner.addSubview(fixture.view)
+        fixture.scene.updateVisibleViewport()
+
+        // SKView boundsをouter座標へ直接変換し、既知のouter boundsだけでclipする。
+        // runtime helperをexpected値生成に使用しない。
+        let skBoundsInOuter = fixture.view.convert(fixture.view.bounds, to: outer)
+        let expectedInOuter = skBoundsInOuter.intersection(outer.bounds)
+        let expectedVisible = outer.convert(expectedInOuter, to: fixture.view)
+            .intersection(fixture.view.bounds)
+        let expectedSafe = MazeCameraSafetyGeometry.gameplaySafeRect(
+            viewportBounds: expectedVisible,
+            insets: MazeScene.gameplaySafeInsets
+        )
+
+        assert(rect: fixture.scene.visibleViewportRect(in: fixture.view),
+               equals: expectedVisible)
+        assert(rect: fixture.scene.gameplaySafeRect(in: fixture.view),
+               equals: expectedSafe)
+        assertProjectedPlayerAndContext(scene: fixture.scene,
+                                        view: fixture.view,
+                                        inside: expectedSafe)
+    }
+
+    @MainActor
+    func testVisibleViewportIgnoresNonClippingAncestorBounds() throws {
+        let root = UIView(frame: CGRect(x: 0, y: 0, width: 800, height: 800))
+        let outer = UIView(frame: CGRect(x: 120, y: 100, width: 220, height: 260))
+        outer.clipsToBounds = false
+        outer.layer.masksToBounds = false
+        let inner = UIView(frame: CGRect(x: -70, y: -55, width: 390, height: 520))
+        inner.clipsToBounds = false
+        let fixture = try visibilityScene(target: Coord(x: 25, y: 25),
+                                          frame: CGRect(origin: .zero,
+                                                        size: CGSize(width: 390, height: 520)))
+
+        root.addSubview(outer)
+        outer.addSubview(inner)
+        inner.addSubview(fixture.view)
+        fixture.scene.updateVisibleViewport()
+
+        // SKViewはnon-clipping outerのboundsをまたぐが、root内には完全に収まる。
+        // したがってouterによる縮小はなく、既知のSKView bounds全体がvisible。
+        let expectedVisible = fixture.view.bounds
+        let expectedSafe = CGRect(x: 40, y: 40, width: 310, height: 440)
+        XCTAssertFalse(outer.bounds.contains(inner.frame))
+        assert(rect: fixture.scene.visibleViewportRect(in: fixture.view),
+               equals: expectedVisible)
+        assert(rect: fixture.scene.gameplaySafeRect(in: fixture.view),
+               equals: expectedSafe)
+        assertProjectedPlayerAndContext(scene: fixture.scene,
+                                        view: fixture.view,
+                                        inside: expectedSafe)
+    }
+
+    @MainActor
     func testProjectedPlayerAndPathContextStaySafeAcrossEdgesAndCorners() throws {
         let positions = [
             Coord(x: 25, y: 1),
@@ -1968,6 +2035,13 @@ final class MazeGameTests: XCTestCase {
     private func presentedVisibilityScene(target: Coord,
                                           viewportSize: CGSize) throws -> (scene: MazeScene,
                                                                           view: SKView) {
+        try visibilityScene(target: target,
+                            frame: CGRect(origin: .zero, size: viewportSize))
+    }
+
+    @MainActor
+    private func visibilityScene(target: Coord,
+                                 frame: CGRect) throws -> (scene: MazeScene, view: SKView) {
         let maze = Maze.generate(seed: 20_260_809)
         XCTAssertTrue(maze.isOpen(target), "target must be an open maze cell")
         let game = MazeGame(maze: maze)
@@ -1975,11 +2049,23 @@ final class MazeGameTests: XCTestCase {
                                                                       from: maze.start,
                                                                       to: target)))
         let scene = MazeScene(game: game, traveler: .wanderer)
-        let view = SKView(frame: CGRect(origin: .zero, size: viewportSize))
+        let view = SKView(frame: frame)
         view.presentScene(scene)
         scene.updateViewportSize(view.bounds.size)
         RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         return (scene, view)
+    }
+
+    @MainActor
+    private func assertProjectedPlayerAndContext(scene: MazeScene,
+                                                 view: SKView,
+                                                 inside safeRect: CGRect,
+                                                 file: StaticString = #filePath,
+                                                 line: UInt = #line) {
+        assert(frame: scene.projectedPlayerFrame(in: view),
+               isInside: safeRect, label: "player", file: file, line: line)
+        assert(frame: scene.projectedPlayerFrame(in: view, includingContext: true),
+               isInside: safeRect, label: "player context", file: file, line: line)
     }
 
     @MainActor
@@ -2017,6 +2103,21 @@ final class MazeGameTests: XCTestCase {
                                     "\(label) minY", file: file, line: line)
         XCTAssertLessThanOrEqual(frame.maxY, safeRect.maxY + tolerance,
                                  "\(label) maxY", file: file, line: line)
+    }
+
+    private func assert(rect actual: CGRect,
+                        equals expected: CGRect,
+                        accuracy: CGFloat = 0.001,
+                        file: StaticString = #filePath,
+                        line: UInt = #line) {
+        XCTAssertEqual(actual.origin.x, expected.origin.x,
+                       accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(actual.origin.y, expected.origin.y,
+                       accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(actual.size.width, expected.size.width,
+                       accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(actual.size.height, expected.size.height,
+                       accuracy: accuracy, file: file, line: line)
     }
 
     private func allCells(in maze: Maze) -> [Coord] {

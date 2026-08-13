@@ -382,17 +382,27 @@ final class MazeScene: SKScene {
     /// SKViewがSwiftUI祖先Viewでclipされる場合も含め、window上で本当に見える部分を返す。
     private var actualVisibleViewportRect: CGRect {
         guard let view else { return CGRect(origin: .zero, size: size) }
-        var visibleRect = view.bounds
+        return actualVisibleViewportRect(in: view)
+    }
+
+    private func actualVisibleViewportRect(in view: SKView) -> CGRect {
+        let originalView = view
+        // visibleRectは常にcurrentの座標系に属する。各ancestorでparent座標へ
+        // 進めたまま保持し、originalView座標へ戻すのは走査完了後の一度だけ。
+        var visibleRect = originalView.bounds
         var current: UIView = view
 
         while let parent = current.superview {
-            let parentRect = current.convert(visibleRect, to: parent)
-            let clipped = parentRect.intersection(parent.bounds)
-            guard !clipped.isNull, !clipped.isEmpty else { return .zero }
-            visibleRect = current.convert(clipped, from: parent)
+            visibleRect = current.convert(visibleRect, to: parent)
+            if parent.clipsToBounds || parent.layer.masksToBounds || parent is UIWindow {
+                visibleRect = visibleRect.intersection(parent.bounds)
+                guard !visibleRect.isNull, !visibleRect.isEmpty else { return .zero }
+            }
             current = parent
         }
-        return visibleRect.intersection(view.bounds)
+
+        let rectInOriginalView = current.convert(visibleRect, to: originalView)
+        return rectInOriginalView.intersection(originalView.bounds)
     }
 
     private var worldFrame: CGRect {
@@ -452,6 +462,12 @@ final class MazeScene: SKScene {
     func gameplaySafeRect(in view: SKView) -> CGRect {
         MazeCameraSafetyGeometry.gameplaySafeRect(viewportBounds: actualVisibleViewportRect,
                                                   insets: Self.gameplaySafeInsets)
+    }
+
+    /// Runtimeと同じvisible viewportをintegration testで観測するための読み取り専用窓口。
+    /// expected値はtest fixtureの既知frameから独立に算出する。
+    func visibleViewportRect(in view: SKView) -> CGRect {
+        actualVisibleViewportRect(in: view)
     }
 
     func projectedPlayerFrame(in view: SKView, includingContext: Bool = false) -> CGRect {

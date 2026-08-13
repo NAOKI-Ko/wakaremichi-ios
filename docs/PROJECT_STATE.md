@@ -21,7 +21,7 @@ Latest reviewed implementation/config status: APPROVED
 - ChatGPT exact SHA code review: PASS
 - Gameplay Visibility Fix code review: PASS
 - Gameplay Visibility Fix subsequent Human device QA: FAIL — bottom boundary clipping reproduced
-- Unit Tests: 88 PASS / FAIL 0
+- Unit Tests: 90 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
@@ -123,17 +123,20 @@ Implemented:
 - `didChangeSize(_:)`, measured SwiftUI `SpriteView` size, and ancestor-clipped visible bounds immediately reclamp the camera and resize the vignette.
 - Player is built before the initial camera so the first solve uses the actual sprite frame.
 - `MazePlayView` now keeps viewport measurement separate from layout, and clips the HUD texture to its fixed 112pt allocation so it cannot cover SpriteKit content.
+- Fixed `actualVisibleViewportRect` ancestor traversal so each intermediate rectangle remains in its owning ancestor coordinate space; conversion back to `SKView` occurs once after traversal.
+- Ancestor intersection now applies only to clipping/masking ancestors and the root window, so non-clipping SwiftUI/UIKit containers do not shrink the viewport.
 - Floor cells always use `MazeFloor`; wall cells always use `MazeWall`.
 - Coordinate cropping remains within those two source textures; variant assets remain available for rollback.
 - Maze generation, topology, collision, movement, Fog of War, HUD semantics, persistence, ads, audio, and identifiers are unchanged.
 
 Validation:
 
-- Unit Tests: 88 PASS / FAIL 0 (83 existing plus 5 review-fix tests)
+- Unit Tests: 90 PASS / FAIL 0 (88 existing plus 2 coordinate-traversal regression tests)
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned clean build: PASS
 - Codex Visual QA: PASS on 320x568 and 390x844 layouts
 - Actual `MazeScene` + `SKView` projection assertions cover player/context at edges and corners, visible goal maximum pulse, resize, warp, and restart.
+- Independent nested-clipping and non-clipping ancestor fixtures validate visible/safe rectangles without using the runtime helper to produce expected values.
 - Camera matrix: center, four edges, and four corners rendered and inspected.
 - Bottom/right goal approach: traveler, goal flag, adjacent floor, and walls remain fully visible above the HUD boundary.
 - Full `MazePlayView` evidence confirms the 112pt HUD no longer paints over SpriteKit content.
