@@ -946,32 +946,37 @@ struct MazePlayView: View {
 
             // SKSceneは表示領域へ追従するため、SwiftUI側では正方形制約を重ねず、
             // 上部バーとHUDの間をすべて迷路へ渡す。
-            GeometryReader { viewport in
-                SpriteView(scene: scene, options: [.ignoresSiblingOrder])
-                    .contentShape(Rectangle())
-                    .allowsHitTesting(!isInputBlocked)
-                    .gesture(
-                        DragGesture(minimumDistance: Tuning.swipeMinDistance)
-                            .onEnded { value in
-                                guard !isInputBlocked else { return }
-                                let t = value.translation
-                                let direction: Direction
-                                if abs(t.width) > abs(t.height) {
-                                    direction = t.width > 0 ? .right : .left
-                                } else {
-                                    direction = t.height > 0 ? .down : .up
-                                }
-                                scene.receive(direction: direction)
+            SpriteView(scene: scene, options: [.ignoresSiblingOrder])
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .allowsHitTesting(!isInputBlocked)
+                .gesture(
+                    DragGesture(minimumDistance: Tuning.swipeMinDistance)
+                        .onEnded { value in
+                            guard !isInputBlocked else { return }
+                            let t = value.translation
+                            let direction: Direction
+                            if abs(t.width) > abs(t.height) {
+                                direction = t.width > 0 ? .right : .left
+                            } else {
+                                direction = t.height > 0 ? .down : .up
                             }
-                    )
-                    .onAppear {
-                        scene.updateViewportSize(viewport.size)
+                            scene.receive(direction: direction)
+                        }
+                )
+                // SpriteView自身をVStackのflexible childにすることで、112pt HUDを
+                // 差し引いた残余高へ収める。GeometryReaderは計測だけを担う。
+                .background {
+                    GeometryReader { viewport in
+                        Color.clear
+                            .onAppear {
+                                scene.updateViewportSize(viewport.size)
+                            }
+                            .onChange(of: viewport.size) { _, newSize in
+                                scene.updateViewportSize(newSize)
+                            }
                     }
-                    .onChange(of: viewport.size) { _, newSize in
-                        scene.updateViewportSize(newSize)
-                    }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
 
             // --- 下部HUD: 旅人・体力・ミニマップ ---
             Rectangle()
@@ -983,6 +988,9 @@ struct MazePlayView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 112)
                 .background(Palette.surfaceSUI)
+                // hudTextureのaspectFillが割当領域外へ描画されるとSpriteView下端を
+                // 覆うため、HUDは112ptの境界で明示的に切る。
+                .clipped()
                 .accessibilityIdentifier("explorationHUD")
         }
     }

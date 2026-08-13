@@ -68,6 +68,126 @@ enum MazeCameraGeometry {
     }
 }
 
+struct MazeGameplaySafeInsets: Equatable {
+    let left: CGFloat
+    let right: CGFloat
+    let top: CGFloat
+    let bottom: CGFloat
+}
+
+/// world由来のcamera範囲だけでなく、最終的に表示されるvisual frameを
+/// SpriteView内部の安全領域へ収めるためのcamera solver。
+enum MazeCameraSafetyGeometry {
+    static func gameplaySafeRect(viewportSize: CGSize,
+                                 insets: MazeGameplaySafeInsets) -> CGRect {
+        gameplaySafeRect(viewportBounds: CGRect(origin: .zero, size: viewportSize),
+                         insets: insets)
+    }
+
+    static func gameplaySafeRect(viewportBounds: CGRect,
+                                 insets: MazeGameplaySafeInsets) -> CGRect {
+        let width = sanitizedDimension(viewportBounds.width)
+        let height = sanitizedDimension(viewportBounds.height)
+        let left = sanitizedInset(insets.left, limit: width / 2)
+        let right = sanitizedInset(insets.right, limit: width / 2)
+        let top = sanitizedInset(insets.top, limit: height / 2)
+        let bottom = sanitizedInset(insets.bottom, limit: height / 2)
+        return CGRect(x: viewportBounds.minX + left,
+                      y: viewportBounds.minY + top,
+                      width: max(width - left - right, 0),
+                      height: max(height - top - bottom, 0))
+    }
+
+    static func resolvedPosition(_ desired: CGPoint,
+                                 worldSize: CGSize,
+                                 viewportSize: CGSize,
+                                 visibleViewportRect: CGRect? = nil,
+                                 safeInsets: MazeGameplaySafeInsets,
+                                 maximumOutsideWorldReveal: CGFloat,
+                                 requiredFrames: [CGRect],
+                                 optionalFrames: [CGRect] = []) -> CGPoint {
+        let worldBounds = MazeCameraGeometry.bounds(
+            worldSize: worldSize,
+            viewportSize: viewportSize,
+            edgeContextMargin: maximumOutsideWorldReveal
+        )
+        let fallback = CGPoint(x: (worldBounds.minX + worldBounds.maxX) / 2,
+                               y: (worldBounds.minY + worldBounds.maxY) / 2)
+        let desired = CGPoint(x: desired.x.isFinite ? desired.x : fallback.x,
+                              y: desired.y.isFinite ? desired.y : fallback.y)
+
+        guard let requiredBounds = constrainedBounds(
+            base: worldBounds,
+            viewportSize: viewportSize,
+            visibleViewportRect: visibleViewportRect,
+            safeInsets: safeInsets,
+            protectedFrames: requiredFrames
+        ) else {
+            return clamped(desired, to: worldBounds)
+        }
+
+        let selectedBounds: MazeCameraBounds
+        if !optionalFrames.isEmpty,
+           let combined = constrainedBounds(
+               base: requiredBounds,
+               viewportSize: viewportSize,
+               visibleViewportRect: visibleViewportRect,
+               safeInsets: safeInsets,
+               protectedFrames: optionalFrames
+           ) {
+            selectedBounds = combined
+        } else {
+            selectedBounds = requiredBounds
+        }
+        return clamped(desired, to: selectedBounds)
+    }
+
+    private static func constrainedBounds(base: MazeCameraBounds,
+                                          viewportSize: CGSize,
+                                          visibleViewportRect: CGRect?,
+                                          safeInsets: MazeGameplaySafeInsets,
+                                          protectedFrames: [CGRect]) -> MazeCameraBounds? {
+        let width = sanitizedDimension(viewportSize.width)
+        let height = sanitizedDimension(viewportSize.height)
+        let viewportBounds = CGRect(origin: .zero, size: CGSize(width: width, height: height))
+        let visibleRect = (visibleViewportRect ?? viewportBounds).intersection(viewportBounds)
+        let safeRect = gameplaySafeRect(viewportBounds: visibleRect, insets: safeInsets)
+        guard safeRect.width > 0, safeRect.height > 0 else { return nil }
+
+        let halfWidth = width / 2
+        let halfHeight = height / 2
+        var minX = base.minX
+        var maxX = base.maxX
+        var minY = base.minY
+        var maxY = base.maxY
+
+        for frame in protectedFrames where !frame.isNull && !frame.isInfinite {
+            // SpriteKit scene座標は下原点。safeRectはviewの上原点なので、
+            // top/bottomのinsetを対応させてcameraの許容範囲へ変換する。
+            minX = max(minX, frame.maxX + halfWidth - safeRect.maxX)
+            maxX = min(maxX, frame.minX + halfWidth - safeRect.minX)
+            minY = max(minY, frame.maxY - halfHeight + safeRect.minY)
+            maxY = min(maxY, frame.minY - halfHeight + safeRect.maxY)
+        }
+
+        guard minX <= maxX, minY <= maxY else { return nil }
+        return MazeCameraBounds(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
+    }
+
+    private static func clamped(_ point: CGPoint, to bounds: MazeCameraBounds) -> CGPoint {
+        CGPoint(x: min(max(point.x, bounds.minX), bounds.maxX),
+                y: min(max(point.y, bounds.minY), bounds.maxY))
+    }
+
+    private static func sanitizedDimension(_ value: CGFloat) -> CGFloat {
+        value.isFinite ? max(value, 0) : 0
+    }
+
+    private static func sanitizedInset(_ value: CGFloat, limit: CGFloat) -> CGFloat {
+        value.isFinite ? min(max(value, 0), max(limit, 0)) : 0
+    }
+}
+
 enum MazeTileKind {
     case floor
     case wall
@@ -101,6 +221,19 @@ final class MazeScene: SKScene {
     private var pendingEventShown = false
 
     private static let tile: CGFloat = 40
+    /// SpriteView内部でplayerと進路文脈を端へ密着させないための余白。
+    /// HUDはSpriteView外なので、112ptをここで再控除しない。
+    static let gameplaySafeInsets = MazeGameplaySafeInsets(
+        left: tile,
+        right: tile,
+        top: tile,
+        bottom: tile
+    )
+    /// 1タイルのsafe inset + 約1タイルのnavigation contextから導出した上限。
+    static let maximumOutsideWorldReveal = tile * 2
+    private static let playerContextPadding = tile
+    private static let nearbyGoalDistance = tile * 3
+    private static let goalPulseMaximumScale: CGFloat = 1.10
 
     /// 一度でも見えたマスだけノードを作る。51x51=2601マスぶんを最初に全部
     /// 生成すると重いので、霧が晴れた場所から遅延生成する。
@@ -150,12 +283,15 @@ final class MazeScene: SKScene {
 
     override func didMove(to view: SKView) {
         guard cameraNode == nil else { return }
-        buildCamera()
         buildAmbiance()
         buildLight()
         buildPlayer()
+        // camera safetyはactual player sprite sizeを使うため、playerを先に作る。
+        buildCamera()
         buildVignette()
         applyFog(animated: false)
+        // 初期探索範囲にgoalが含まれる場合も、生成直後から同じsolverへ通す。
+        refreshViewportGeometry()
         game.noteStopped()
         onHUDUpdate?(makeHUDSnapshot())
 
@@ -185,12 +321,17 @@ final class MazeScene: SKScene {
         }
     }
 
+    /// SwiftUIのlayout完了後に祖先clipを含むactual visible rectで再solveする。
+    func updateVisibleViewport() {
+        refreshViewportGeometry()
+    }
+
     private func refreshViewportGeometry() {
         guard cameraNode != nil else { return }
 
         // resizeFill後の実効viewportを正本にし、古いサイズ向けの移動先を残さない。
         cameraNode.removeAllActions()
-        cameraNode.position = clampedCameraPosition(point(for: game.player))
+        cameraNode.position = resolvedCameraPosition(point(for: game.player))
         updateVignette()
     }
 
@@ -216,21 +357,129 @@ final class MazeScene: SKScene {
 
     private func buildCamera() {
         let camera = SKCameraNode()
-        camera.position = clampedCameraPosition(point(for: game.player))
+        cameraNode = camera
+        camera.position = resolvedCameraPosition(point(for: game.player))
         addChild(camera)
         self.camera = camera
-        cameraNode = camera
     }
 
-    private func clampedCameraPosition(_ p: CGPoint) -> CGPoint {
-        let worldSize = CGSize(width: CGFloat(game.maze.width) * Self.tile,
-                               height: CGFloat(game.maze.height) * Self.tile)
-        return MazeCameraGeometry.clampedPosition(
-            p,
+    private var worldSize: CGSize {
+        CGSize(width: CGFloat(game.maze.width) * Self.tile,
+               height: CGFloat(game.maze.height) * Self.tile)
+    }
+
+    private var effectiveViewportSize: CGSize {
+        if let view,
+           view.bounds.width.isFinite,
+           view.bounds.height.isFinite,
+           view.bounds.width > 0,
+           view.bounds.height > 0 {
+            return view.bounds.size
+        }
+        return size
+    }
+
+    /// SKViewがSwiftUI祖先Viewでclipされる場合も含め、window上で本当に見える部分を返す。
+    private var actualVisibleViewportRect: CGRect {
+        guard let view else { return CGRect(origin: .zero, size: size) }
+        var visibleRect = view.bounds
+        var current: UIView = view
+
+        while let parent = current.superview {
+            let parentRect = current.convert(visibleRect, to: parent)
+            let clipped = parentRect.intersection(parent.bounds)
+            guard !clipped.isNull, !clipped.isEmpty else { return .zero }
+            visibleRect = current.convert(clipped, from: parent)
+            current = parent
+        }
+        return visibleRect.intersection(view.bounds)
+    }
+
+    private var worldFrame: CGRect {
+        CGRect(origin: .zero, size: worldSize)
+    }
+
+    private func resolvedCameraPosition(_ playerPosition: CGPoint) -> CGPoint {
+        let playerContext = playerContextFrame(at: playerPosition)
+        let visibleGoal = visibleNearbyGoalFrame(relativeTo: playerPosition)
+        return MazeCameraSafetyGeometry.resolvedPosition(
+            playerPosition,
             worldSize: worldSize,
-            viewportSize: size,
-            edgeContextMargin: Self.tile
+            viewportSize: effectiveViewportSize,
+            visibleViewportRect: actualVisibleViewportRect,
+            safeInsets: Self.gameplaySafeInsets,
+            maximumOutsideWorldReveal: Self.maximumOutsideWorldReveal,
+            requiredFrames: [playerContext],
+            optionalFrames: visibleGoal.map { [$0] } ?? []
         )
+    }
+
+    private func spriteFrame(_ node: SKSpriteNode,
+                             at position: CGPoint? = nil,
+                             minimumScale: CGFloat = 1) -> CGRect {
+        let scaleX = max(abs(node.xScale), minimumScale)
+        let scaleY = max(abs(node.yScale), minimumScale)
+        let renderedSize = CGSize(width: node.size.width * scaleX,
+                                  height: node.size.height * scaleY)
+        let position = position ?? node.position
+        return CGRect(x: position.x - node.anchorPoint.x * renderedSize.width,
+                      y: position.y - node.anchorPoint.y * renderedSize.height,
+                      width: renderedSize.width,
+                      height: renderedSize.height)
+    }
+
+    private func playerContextFrame(at position: CGPoint) -> CGRect {
+        let playerFrame = spriteFrame(playerNode, at: position, minimumScale: 1)
+        let expanded = playerFrame.insetBy(dx: -Self.playerContextPadding,
+                                           dy: -Self.playerContextPadding)
+        // world外に存在しない通路文脈までは強制しない。
+        let meaningfulContext = expanded.intersection(worldFrame)
+        return meaningfulContext.isNull ? playerFrame : meaningfulContext
+    }
+
+    private func visibleNearbyGoalFrame(relativeTo playerPosition: CGPoint) -> CGRect? {
+        guard game.explored.contains(game.maze.goal), let goalNode else { return nil }
+        let goalPosition = goalNode.position
+        guard abs(goalPosition.x - playerPosition.x) <= Self.nearbyGoalDistance,
+              abs(goalPosition.y - playerPosition.y) <= Self.nearbyGoalDistance else {
+            return nil
+        }
+        // pulse action中の最大scaleを含む完全な旗frameを保護する。
+        return spriteFrame(goalNode, minimumScale: Self.goalPulseMaximumScale)
+    }
+
+    /// Runtimeとintegration testが同じsafe frameを参照する。
+    func gameplaySafeRect(in view: SKView) -> CGRect {
+        MazeCameraSafetyGeometry.gameplaySafeRect(viewportBounds: actualVisibleViewportRect,
+                                                  insets: Self.gameplaySafeInsets)
+    }
+
+    func projectedPlayerFrame(in view: SKView, includingContext: Bool = false) -> CGRect {
+        let sceneFrame = includingContext
+            ? playerContextFrame(at: playerNode.position)
+            : spriteFrame(playerNode, minimumScale: 1)
+        return projectedFrame(sceneFrame, in: view)
+    }
+
+    func projectedVisibleGoalFrame(in view: SKView) -> CGRect? {
+        guard let goalFrame = visibleNearbyGoalFrame(relativeTo: playerNode.position) else {
+            return nil
+        }
+        return projectedFrame(goalFrame, in: view)
+    }
+
+    private func projectedFrame(_ sceneFrame: CGRect, in view: SKView) -> CGRect {
+        let corners = [
+            CGPoint(x: sceneFrame.minX, y: sceneFrame.minY),
+            CGPoint(x: sceneFrame.maxX, y: sceneFrame.minY),
+            CGPoint(x: sceneFrame.minX, y: sceneFrame.maxY),
+            CGPoint(x: sceneFrame.maxX, y: sceneFrame.maxY),
+        ].map { view.convert($0, from: self) }
+        let xs = corners.map(\.x)
+        let ys = corners.map(\.y)
+        guard let minX = xs.min(), let maxX = xs.max(),
+              let minY = ys.min(), let maxY = ys.max() else { return .null }
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 
     // MARK: - タイルの遅延生成
@@ -549,16 +798,16 @@ final class MazeScene: SKScene {
         let (newly, chestOpened) = game.advance(to: step.coord, arrivedByWarp: step.arrivedByWarp)
         onHUDUpdate?(makeHUDSnapshot())
         let destination = point(for: step.coord)
+        // 新たに見えたgoal nodeも同じcamera solveへ含められるよう、先に生成する。
+        applyFog(animated: true)
 
         if step.arrivedByWarp {
             performWarpJump(to: destination)
         } else {
             playerNode.run(.move(to: destination, duration: Tuning.stepDuration))
             glowNode.run(.move(to: destination, duration: Tuning.stepDuration))
-            cameraNode.run(.move(to: clampedCameraPosition(destination), duration: Tuning.stepDuration))
+            cameraNode.run(.move(to: resolvedCameraPosition(destination), duration: Tuning.stepDuration))
         }
-
-        applyFog(animated: true)
 
         if step.arrivedByWarp {
             GameAudio.shared.play(.warp, in: self)
@@ -632,7 +881,7 @@ final class MazeScene: SKScene {
                         .scale(to: 1.0, duration: Tuning.warpFadeDuration)]),
             ]), withKey: "warp")
         }
-        let cameraDestination = clampedCameraPosition(destination)
+        let cameraDestination = resolvedCameraPosition(destination)
         cameraNode.run(.sequence([
             .wait(forDuration: Tuning.warpFadeDuration),
             .run { [weak self] in self?.cameraNode.position = cameraDestination },
@@ -791,7 +1040,7 @@ final class MazeScene: SKScene {
         glowNode.setScale(1.0)
 
         cameraNode.removeAllActions()
-        cameraNode.position = clampedCameraPosition(start)
+        cameraNode.position = resolvedCameraPosition(start)
 
         applyFog(animated: false)
         game.noteStopped()

@@ -12,23 +12,23 @@ Latest reviewed implementation/config commit:
 `135b101b94704bfa8cdc6911227ef8a5db8cf35a`
 
 State Snapshot:
-`d451969ce538a9f7ea6165389da32c17f6d0719c`
+`b166a73bf0d56bab082aefc0edaf4e483cfc13fd`
 
-Review target: `f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
+Review target: current Gameplay Visibility Review Fix implementation commit (see `HEAD`)
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
 - Gameplay Visibility Fix code review: PASS
 - Gameplay Visibility Fix subsequent Human device QA: FAIL — bottom boundary clipping reproduced
-- Unit Tests: 83 PASS / FAIL 0
+- Unit Tests: 88 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
 Current work unit: Gameplay Visibility Fix — Review Fix
 
-Current work unit status: SPEC READY / FIX IMPLEMENTATION NOT STARTED
+Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -99,7 +99,7 @@ Integrated and APPROVED
 
 # Gameplay Visibility Fix
 
-FIX REQUIRED
+REVIEW PENDING
 
 Approval history:
 
@@ -116,44 +116,50 @@ Confirmed causes:
 
 Implemented:
 
-- Added a pure, testable camera-bounds calculation with one-tile controlled overscan.
-- Initial placement, movement, warp, restart, and resize all use the same camera clamp path.
-- `didChangeSize(_:)` and the measured SwiftUI `SpriteView` size immediately reclamp the camera and resize the vignette.
+- Added a tile-relative screen-space `gameplaySafeRect` inside the actual visible `SKView` bounds.
+- Camera resolution protects the complete player sprite, about one tile of meaningful path context, and the complete nearby explored goal at its maximum pulse scale.
+- Controlled outside-world reveal is capped at two tiles; player/context safety has priority when optional goal protection cannot fit.
+- Initial placement, movement, warp, restart, and resize all use one `resolvedCameraPosition` path.
+- `didChangeSize(_:)`, measured SwiftUI `SpriteView` size, and ancestor-clipped visible bounds immediately reclamp the camera and resize the vignette.
+- Player is built before the initial camera so the first solve uses the actual sprite frame.
+- `MazePlayView` now keeps viewport measurement separate from layout, and clips the HUD texture to its fixed 112pt allocation so it cannot cover SpriteKit content.
 - Floor cells always use `MazeFloor`; wall cells always use `MazeWall`.
 - Coordinate cropping remains within those two source textures; variant assets remain available for rollback.
 - Maze generation, topology, collision, movement, Fog of War, HUD semantics, persistence, ads, audio, and identifiers are unchanged.
 
 Validation:
 
-- Unit Tests: 83 PASS / FAIL 0 (68 existing plus 15 focused visibility tests)
+- Unit Tests: 88 PASS / FAIL 0 (83 existing plus 5 review-fix tests)
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned clean build: PASS
-- First Visual QA: PASS on 320x568 and 390x844 layouts
-- Camera matrix: center, four edges, and four corners rendered and inspected
-- Bottom-right goal approach: traveler, goal flag, adjacent floor, and walls fully visible in SpriteView evidence
-- Full `MazePlayView` evidence confirms header/HUD remain separate from the SpriteKit viewport
-- ChatGPT exact SHA code review: PASS
-- Subsequent Human physical-device camera QA: FAIL
+- Codex Visual QA: PASS on 320x568 and 390x844 layouts
+- Actual `MazeScene` + `SKView` projection assertions cover player/context at edges and corners, visible goal maximum pulse, resize, warp, and restart.
+- Camera matrix: center, four edges, and four corners rendered and inspected.
+- Bottom/right goal approach: traveler, goal flag, adjacent floor, and walls remain fully visible above the HUD boundary.
+- Full `MazePlayView` evidence confirms the 112pt HUD no longer paints over SpriteKit content.
+- Exact-SHA review: PENDING
+- New Human physical-device camera QA: PENDING
 - Human floor/wall readability QA: PASS
 
 Current component status:
 
-- Camera visibility: FIX REQUIRED
+- Camera visibility: REVIEW PENDING
 - Floor/wall single-texture rendering: PASS / retained
 - Floor/wall readability blocker: resolved
 
-Required review-fix acceptance:
+Review-fix acceptance status:
 
-- Define a screen-space `gameplaySafeRect` inside the actual visible SpriteView bounds.
-- Project complete player and visible nearby-goal sprite frames into view coordinates.
-- Assert those frames, plus necessary adjacent tile context, remain inside the safe rectangle.
-- Add actual scene/view integration tests and new full `MazePlayView` evidence showing the HUD boundary.
+- Screen-space `gameplaySafeRect`: IMPLEMENTED / VALIDATION PASS
+- Complete player/context and visible-goal projection containment: PASS
+- Actual scene/view integration coverage: PASS
+- Full `MazePlayView` HUD-boundary evidence: PASS
+- Final Human Gate: PENDING
 
 Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- Map-edge / SpriteView boundary clipping
+- Gameplay Visibility Review Fix exact-SHA review and Human device QA
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -165,15 +171,13 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Next Work Unit
 
-Gameplay Visibility Fix — Review Fix Implementation
+Gameplay Visibility Fix — Exact-SHA Review / Human Gate
 
-Status: SPEC READY / IMPLEMENTATION NOT STARTED
+Status: IMPLEMENTATION VALIDATED / REVIEW PENDING
 
-1. Implement the screen-space gameplay safe frame and sprite-bounds acceptance.
-2. Add actual MazeScene/SKView integration tests and a full `MazePlayView` regression.
-3. Run full tests and Debug/Release builds.
-4. Capture new required visual evidence.
-5. Complete exact-SHA review and a new Human Gate before restoring approval.
+1. Review the exact implementation commit.
+2. Confirm bottom, bottom goal, left/right, top, corners, HUD boundary, and floor/wall readability on a physical device.
+3. Record a new Final Review Receipt only after the Human Gate passes.
 
 # Do Not Start
 

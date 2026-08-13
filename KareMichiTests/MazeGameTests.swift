@@ -617,20 +617,19 @@ final class MazeGameTests: XCTestCase {
         let tile: CGFloat = 40
         let startPoint = CGPoint(x: (CGFloat(maze.start.x) + 0.5) * tile,
                                  y: (CGFloat(maze.height - 1 - maze.start.y) + 0.5) * tile)
-        let expectedCamera = MazeCameraGeometry.clampedPosition(
-            startPoint,
+        let cameraBounds = MazeCameraGeometry.bounds(
             worldSize: CGSize(width: CGFloat(maze.width) * tile,
                               height: CGFloat(maze.height) * tile),
             viewportSize: scene.size,
-            edgeContextMargin: tile
+            edgeContextMargin: MazeScene.maximumOutsideWorldReveal
         )
 
         XCTAssertEqual(player.position.x, startPoint.x, accuracy: 0.001)
         XCTAssertEqual(player.position.y, startPoint.y, accuracy: 0.001)
         XCTAssertEqual(glow.position.x, startPoint.x, accuracy: 0.001)
         XCTAssertEqual(glow.position.y, startPoint.y, accuracy: 0.001)
-        XCTAssertEqual(camera.position.x, expectedCamera.x, accuracy: 0.001)
-        XCTAssertEqual(camera.position.y, expectedCamera.y, accuracy: 0.001)
+        XCTAssertTrue(cameraBounds.contains(camera.position))
+        assertProtectedFramesAreSafe(scene: scene, view: view)
     }
 
     func testCameraGeometryLeavesValidCenterPositionUnchanged() {
@@ -791,25 +790,27 @@ final class MazeGameTests: XCTestCase {
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 520, height: 520))
         view.presentScene(scene)
 
-        scene.size = CGSize(width: 320, height: 400)
+        view.frame = CGRect(x: 0, y: 0, width: 320, height: 400)
+        scene.updateViewportSize(view.bounds.size)
         var mirror = Mirror(reflecting: scene)
         let camera = try XCTUnwrap(mirror.children.first { $0.label == "cameraNode" }?.value
             as? SKCameraNode)
         let vignette = try XCTUnwrap(mirror.children.first { $0.label == "vignetteNode" }?.value
             as? SKSpriteNode)
-        XCTAssertEqual(camera.position.x, 120, accuracy: 0.001)
-        XCTAssertEqual(camera.position.y, 1_880, accuracy: 0.001)
+        XCTAssertEqual(camera.position.x, 80, accuracy: 0.001)
+        XCTAssertEqual(camera.position.y, 1_920, accuracy: 0.001)
         XCTAssertEqual(vignette.size.width, 320, accuracy: 0.001)
         XCTAssertEqual(vignette.size.height, 400, accuracy: 0.001)
 
-        scene.size = CGSize(width: 390, height: 600)
+        view.frame = CGRect(x: 0, y: 0, width: 390, height: 600)
+        scene.updateViewportSize(view.bounds.size)
         mirror = Mirror(reflecting: scene)
         let resizedCamera = try XCTUnwrap(mirror.children.first { $0.label == "cameraNode" }?.value
             as? SKCameraNode)
         let resizedVignette = try XCTUnwrap(mirror.children.first { $0.label == "vignetteNode" }?.value
             as? SKSpriteNode)
-        XCTAssertEqual(resizedCamera.position.x, 155, accuracy: 0.001)
-        XCTAssertEqual(resizedCamera.position.y, 1_780, accuracy: 0.001)
+        XCTAssertEqual(resizedCamera.position.x, 115, accuracy: 0.001)
+        XCTAssertEqual(resizedCamera.position.y, 1_820, accuracy: 0.001)
         XCTAssertEqual(resizedVignette.size.width, 390, accuracy: 0.001)
         XCTAssertEqual(resizedVignette.size.height, 600, accuracy: 0.001)
     }
@@ -1653,6 +1654,105 @@ final class MazeGameTests: XCTestCase {
     }
 
     @MainActor
+    func testGameplaySafeRectAndOutsideRevealAreTileRelative() {
+        let viewport = CGSize(width: 320, height: 400)
+        let safeRect = MazeCameraSafetyGeometry.gameplaySafeRect(
+            viewportSize: viewport,
+            insets: MazeScene.gameplaySafeInsets
+        )
+
+        XCTAssertEqual(safeRect, CGRect(x: 40, y: 40, width: 240, height: 320))
+        XCTAssertEqual(MazeScene.maximumOutsideWorldReveal, 80, accuracy: 0.001)
+    }
+
+    @MainActor
+    func testProjectedPlayerAndPathContextStaySafeAcrossEdgesAndCorners() throws {
+        let positions = [
+            Coord(x: 25, y: 1),
+            Coord(x: 25, y: 49),
+            Coord(x: 1, y: 25),
+            Coord(x: 49, y: 25),
+            Coord(x: 1, y: 1),
+            Coord(x: 49, y: 1),
+            Coord(x: 1, y: 49),
+            Coord(x: 49, y: 49),
+        ]
+        let viewports = [CGSize(width: 320, height: 400),
+                         CGSize(width: 390, height: 686)]
+
+        for viewport in viewports {
+            for position in positions {
+                let fixture = try presentedVisibilityScene(target: position,
+                                                           viewportSize: viewport)
+                assertProtectedFramesAreSafe(scene: fixture.scene,
+                                             view: fixture.view,
+                                             requireGoal: position == fixture.scene.game.maze.goal)
+            }
+        }
+    }
+
+    @MainActor
+    func testVisibleGoalMaximumPulseFrameStaysSafeAtBottomRight() throws {
+        let maze = Maze.generate(seed: 20_260_809)
+        let approach = try XCTUnwrap(openNeighbor(of: maze.goal, in: maze))
+
+        for viewport in [CGSize(width: 320, height: 400),
+                         CGSize(width: 390, height: 686)] {
+            let fixture = try presentedVisibilityScene(target: approach,
+                                                       viewportSize: viewport)
+            XCTAssertTrue(fixture.scene.game.explored.contains(maze.goal))
+            assertProtectedFramesAreSafe(scene: fixture.scene,
+                                         view: fixture.view,
+                                         requireGoal: true)
+        }
+    }
+
+    @MainActor
+    func testProjectedFramesRemainSafeAfterViewportResize() throws {
+        let fixture = try presentedVisibilityScene(target: Coord(x: 49, y: 49),
+                                                   viewportSize: CGSize(width: 520, height: 520))
+        fixture.view.frame = CGRect(origin: .zero, size: CGSize(width: 320, height: 400))
+        fixture.scene.updateViewportSize(fixture.view.bounds.size)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+
+        XCTAssertEqual(fixture.scene.size, fixture.view.bounds.size)
+        assertProtectedFramesAreSafe(scene: fixture.scene,
+                                     view: fixture.view,
+                                     requireGoal: true)
+    }
+
+    @MainActor
+    func testProjectedFramesRemainSafeAfterWarpAndRestart() throws {
+        let maze = Maze.generate(seed: 20_260_809)
+        let portal = try XCTUnwrap(allCells(in: maze).first { maze.gimmick(at: $0) == .warp })
+        let portalExit = try XCTUnwrap(maze.warpDestination(from: portal))
+        let approach = try XCTUnwrap(openNeighbor(of: portal, in: maze))
+        let game = MazeGame(maze: maze)
+        advanceWithoutStamina(game, along: try XCTUnwrap(shortestPath(in: maze,
+                                                                      from: maze.start,
+                                                                      to: approach)))
+        let scene = MazeScene(game: game, traveler: .wanderer)
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 686))
+        view.presentScene(scene)
+        scene.updateViewportSize(view.bounds.size)
+
+        scene.receive(direction: direction(from: approach, to: portal))
+        let timeout = Date().addingTimeInterval(6)
+        while Date() < timeout {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            let mirror = Mirror(reflecting: scene)
+            let walking = mirror.children.first { $0.label == "isWalking" }?.value as? Bool
+            if walking == false { break }
+        }
+        XCTAssertTrue(game.walked.contains(portalExit))
+        assertProtectedFramesAreSafe(scene: scene, view: view)
+
+        scene.finishNow()
+        XCTAssertTrue(scene.restartAfterAd(ignoringLimit: true))
+        assertProtectedFramesAreSafe(scene: scene, view: view)
+    }
+
+    @MainActor
     func testGameplayVisibilityRendersAllEdgesOnSmallAndStandardPhones() throws {
         let maze = Maze.generate(seed: 20_260_809)
         let goalApproach = try XCTUnwrap(
@@ -1665,12 +1765,13 @@ final class MazeGameTests: XCTestCase {
             ("center", Coord(x: 25, y: 25)),
             ("top", Coord(x: 25, y: 1)),
             ("bottom", Coord(x: 25, y: 49)),
+            ("bottom-goal", maze.goal),
             ("left", Coord(x: 1, y: 25)),
             ("right", Coord(x: 49, y: 25)),
             ("top-left", Coord(x: 1, y: 1)),
             ("top-right", Coord(x: 49, y: 1)),
             ("bottom-left", Coord(x: 1, y: 49)),
-            ("bottom-right-near-goal", goalApproach),
+            ("bottom-right-goal", goalApproach),
         ]
         let viewports: [(String, CGSize)] = [
             ("small", CGSize(width: 320, height: 568)),
@@ -1682,26 +1783,33 @@ final class MazeGameTests: XCTestCase {
                 let fixture = try visibilityPlayView(target: coord)
                 let playView = fixture.view
                     .frame(width: size.width, height: size.height)
+                let isHUDBoundaryEvidence = viewportName == "standard"
+                    && positionName == "bottom-right-goal"
+                let fullPath = isHUDBoundaryEvidence
+                    ? "/tmp/KareMichi-review-fix-full-maze-play-view-with-hud-boundary.png"
+                    : "/tmp/KareMichi-review-fix-visibility-\(viewportName)-\(positionName).png"
                 try renderVisual(
                     playView,
                     size: size,
-                    name: "Visibility \(viewportName) — \(positionName)",
-                    path: "/tmp/KareMichi-visibility-\(viewportName)-\(positionName).png",
-                    spriteViewPath: "/tmp/KareMichi-visibility-\(viewportName)-\(positionName)-scene.png"
+                    name: "Review Fix Visibility \(viewportName) — \(positionName)",
+                    path: fullPath,
+                    spriteViewPath: "/tmp/KareMichi-review-fix-visibility-\(viewportName)-\(positionName)-scene.png",
+                    inspection: { rootView in
+                        let spriteView = try XCTUnwrap(self.firstSubview(of: SKView.self,
+                                                                        in: rootView))
+                        self.assertProtectedFramesAreSafe(
+                            scene: fixture.scene,
+                            view: spriteView,
+                            requireGoal: positionName.contains("goal")
+                        )
+                    }
                 )
                 XCTAssertEqual(fixture.scene.size.width, size.width, accuracy: 0.5)
                 XCTAssertGreaterThan(fixture.scene.size.height, 0)
                 XCTAssertLessThan(fixture.scene.size.height, size.height)
-                let expectedCamera = MazeCameraGeometry.clampedPosition(
-                    CGPoint(x: (CGFloat(coord.x) + 0.5) * 40,
-                            y: (CGFloat(fixture.scene.game.maze.height - 1 - coord.y) + 0.5) * 40),
-                    worldSize: CGSize(width: 2_040, height: 2_040),
-                    viewportSize: fixture.scene.size,
-                    edgeContextMargin: 40
-                )
                 let cameraPosition = try XCTUnwrap(fixture.scene.camera?.position)
-                XCTAssertEqual(cameraPosition.x, expectedCamera.x, accuracy: 0.5)
-                XCTAssertEqual(cameraPosition.y, expectedCamera.y, accuracy: 0.5)
+                XCTAssertTrue(cameraPosition.x.isFinite)
+                XCTAssertTrue(cameraPosition.y.isFinite)
             }
         }
     }
@@ -1856,6 +1964,61 @@ final class MazeGameTests: XCTestCase {
         return (MazePlayView(scene: scene, warning: nil, hud: hud), scene)
     }
 
+    @MainActor
+    private func presentedVisibilityScene(target: Coord,
+                                          viewportSize: CGSize) throws -> (scene: MazeScene,
+                                                                          view: SKView) {
+        let maze = Maze.generate(seed: 20_260_809)
+        XCTAssertTrue(maze.isOpen(target), "target must be an open maze cell")
+        let game = MazeGame(maze: maze)
+        advanceWithoutStamina(game, along: try XCTUnwrap(shortestPath(in: maze,
+                                                                      from: maze.start,
+                                                                      to: target)))
+        let scene = MazeScene(game: game, traveler: .wanderer)
+        let view = SKView(frame: CGRect(origin: .zero, size: viewportSize))
+        view.presentScene(scene)
+        scene.updateViewportSize(view.bounds.size)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        return (scene, view)
+    }
+
+    @MainActor
+    private func assertProtectedFramesAreSafe(scene: MazeScene,
+                                              view: SKView,
+                                              requireGoal: Bool = false,
+                                              file: StaticString = #filePath,
+                                              line: UInt = #line) {
+        let safeRect = scene.gameplaySafeRect(in: view)
+        let playerFrame = scene.projectedPlayerFrame(in: view)
+        let contextFrame = scene.projectedPlayerFrame(in: view, includingContext: true)
+        assert(frame: playerFrame, isInside: safeRect, label: "player", file: file, line: line)
+        assert(frame: contextFrame, isInside: safeRect, label: "player context", file: file, line: line)
+
+        if requireGoal {
+            guard let goalFrame = scene.projectedVisibleGoalFrame(in: view) else {
+                XCTFail("visible nearby goal frame is missing", file: file, line: line)
+                return
+            }
+            assert(frame: goalFrame, isInside: safeRect, label: "goal pulse", file: file, line: line)
+        }
+    }
+
+    private func assert(frame: CGRect,
+                        isInside safeRect: CGRect,
+                        label: String,
+                        tolerance: CGFloat = 0.75,
+                        file: StaticString = #filePath,
+                        line: UInt = #line) {
+        XCTAssertGreaterThanOrEqual(frame.minX, safeRect.minX - tolerance,
+                                    "\(label) minX", file: file, line: line)
+        XCTAssertLessThanOrEqual(frame.maxX, safeRect.maxX + tolerance,
+                                 "\(label) maxX", file: file, line: line)
+        XCTAssertGreaterThanOrEqual(frame.minY, safeRect.minY - tolerance,
+                                    "\(label) minY", file: file, line: line)
+        XCTAssertLessThanOrEqual(frame.maxY, safeRect.maxY + tolerance,
+                                 "\(label) maxY", file: file, line: line)
+    }
+
     private func allCells(in maze: Maze) -> [Coord] {
         (0..<maze.height).flatMap { y in
             (0..<maze.width).map { x in Coord(x: x, y: y) }
@@ -1920,7 +2083,8 @@ final class MazeGameTests: XCTestCase {
                                        size: CGSize,
                                        name: String,
                                        path: String,
-                                       spriteViewPath: String? = nil) throws {
+                                       spriteViewPath: String? = nil,
+                                       inspection: ((UIView) throws -> Void)? = nil) throws {
         let window = UIWindow(frame: CGRect(origin: .zero, size: size))
         let controller = UIHostingController(rootView: view.environment(\.colorScheme, .dark))
         window.rootViewController = controller
@@ -1928,6 +2092,10 @@ final class MazeGameTests: XCTestCase {
         controller.view.frame = window.bounds
         controller.view.setNeedsLayout()
         controller.view.layoutIfNeeded()
+        if let spriteView = firstSubview(of: SKView.self, in: controller.view),
+           let scene = spriteView.scene as? MazeScene {
+            scene.updateVisibleViewport()
+        }
         // SpriteKitのresizeFill・didChangeSize・カメラ再クランプがGPU描画へ
         // 反映された後の証跡を取得する。
         RunLoop.main.run(until: Date().addingTimeInterval(0.5))
@@ -1945,6 +2113,8 @@ final class MazeGameTests: XCTestCase {
         add(attachment)
         try XCTUnwrap(image.pngData()).write(to: URL(fileURLWithPath: path),
                                              options: .atomic)
+
+        try inspection?(controller.view)
 
         if let spriteViewPath,
            let spriteView = firstSubview(of: SKView.self, in: controller.view) {
