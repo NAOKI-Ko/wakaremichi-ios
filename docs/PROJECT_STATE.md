@@ -6,6 +6,15 @@ Wakaremichi / まいにちの分かれ道
 
 v1.0 Release Candidate
 
+## Keepsake Artwork Integration
+
+- Keepsake artwork: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+- Collection visual shelf: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+- Store screenshot readiness: Keepsake artwork ready; final store screenshot recapture pending
+- SwiftData schema: unchanged
+- Review Target: `5cb43efd43229031d66c1b6ceea49abf21ac4613`
+- Latest Reviewed implementation/config commit remains `c7e906a7de34a31432daef9e03abc7d2a66c0b8a` until exact-SHA review.
+
 ## App Store Screenshot Production
 
 - Direction: B — 世界観 × 習慣化訴求（C — 結果・自己投影訴求を補助）
