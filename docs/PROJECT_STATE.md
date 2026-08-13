@@ -12,7 +12,7 @@ v1.0 Release Candidate
 - Collection visual shelf: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 - Store screenshot readiness: Keepsake artwork ready; final store screenshot recapture pending
 - SwiftData schema: unchanged
-- Review Target: `5cb43efd43229031d66c1b6ceea49abf21ac4613`
+- Review Target: `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
 - Latest Reviewed implementation/config commit remains `c7e906a7de34a31432daef9e03abc7d2a66c0b8a` until exact-SHA review.
 
 ## App Store Screenshot Production
