@@ -9,26 +9,26 @@ v1.0 Release Candidate
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`135b101b94704bfa8cdc6911227ef8a5db8cf35a`
+`a03c0c36d5c95b113c316a4c4c26948582859f14`
 
 State Snapshot:
 `b166a73bf0d56bab082aefc0edaf4e483cfc13fd`
 
-Review target: current Gameplay Visibility Review Fix implementation commit (see `HEAD`)
+Review target: none / implementation completed
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
 - Gameplay Visibility Fix code review: PASS
-- Gameplay Visibility Fix subsequent Human device QA: FAIL — bottom boundary clipping reproduced
+- Gameplay Visibility Fix new Human physical-device QA: PASS
 - Unit Tests: 90 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: Gameplay Visibility Fix — Review Fix
+Current work unit: Gameplay Visibility Fix — Final Review Receipt / State Sync
 
-Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
 
 Continuity: Ready
 
@@ -99,7 +99,7 @@ Integrated and APPROVED
 
 # Gameplay Visibility Fix
 
-REVIEW PENDING
+APPROVED
 
 Approval history:
 
@@ -107,6 +107,8 @@ Approval history:
 - Initial Human QA was reported PASS and receipt `69563123adfe7f39e2a3e56e2716789578b81871` recorded approval.
 - Subsequent physical-device screenshot evidence reproduced clipping at the bottom SpriteView/HUD boundary.
 - The previous Final Approval is REVOKED / superseded. Its historical receipt remains in `docs/REVIEW_LOG.md`.
+- Review Fix `0351d6b2d31a465ae8f45ad2aaa5486964300ddf` passed automated validation but exact-SHA review found an ancestor coordinate-space traversal defect.
+- Code Fix `a03c0c36d5c95b113c316a4c4c26948582859f14` corrected that traversal, passed exact-SHA review, and passed the new Human physical-device QA.
 
 Confirmed causes:
 
@@ -140,14 +142,14 @@ Validation:
 - Camera matrix: center, four edges, and four corners rendered and inspected.
 - Bottom/right goal approach: traveler, goal flag, adjacent floor, and walls remain fully visible above the HUD boundary.
 - Full `MazePlayView` evidence confirms the 112pt HUD no longer paints over SpriteKit content.
-- Exact-SHA review: PENDING
-- New Human physical-device camera QA: PENDING
+- ChatGPT exact-SHA review: PASS
+- New Human physical-device camera QA: PASS
 - Human floor/wall readability QA: PASS
 
 Current component status:
 
-- Camera visibility: REVIEW PENDING
-- Floor/wall single-texture rendering: PASS / retained
+- Camera visibility: PASS / APPROVED
+- Floor/wall single-texture rendering: PASS / APPROVED
 - Floor/wall readability blocker: resolved
 
 Review-fix acceptance status:
@@ -156,13 +158,12 @@ Review-fix acceptance status:
 - Complete player/context and visible-goal projection containment: PASS
 - Actual scene/view integration coverage: PASS
 - Full `MazePlayView` HUD-boundary evidence: PASS
-- Final Human Gate: PENDING
+- Final Human Gate: PASS
 
 Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- Gameplay Visibility Review Fix exact-SHA review and Human device QA
 - Apple Developer App ID / Bundle ID alignment verification
 - App Store Connect app record / Bundle ID alignment verification
 - AdMob app Bundle ID alignment verification
@@ -174,13 +175,11 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Next Work Unit
 
-Gameplay Visibility Fix — Exact-SHA Review / Human Gate
+v1.0 Release External Alignment / Submission Readiness
 
-Status: IMPLEMENTATION VALIDATED / REVIEW PENDING
+Status: NOT STARTED
 
-1. Review the exact implementation commit.
-2. Confirm bottom, bottom goal, left/right, top, corners, HUD boundary, and floor/wall readability on a physical device.
-3. Record a new Final Review Receipt only after the Human Gate passes.
+This work unit is intentionally not started by the Gameplay Visibility Final Review Receipt sync.
 
 # Do Not Start
 

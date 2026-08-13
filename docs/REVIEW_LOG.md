@@ -247,3 +247,101 @@ Status:
 - Review Fix specification: ready
 - Review Fix implementation: pending
 - Final Approval: not restored
+
+## 2026-08-13 — Gameplay Visibility Review Fix Final Review Receipt
+
+Work Unit:
+`Gameplay Visibility Fix — Review Fix`
+
+Audit timeline:
+
+1. Initial implementation `f6a35a3239a9fc307a835a60ff4c2bb24f598cbd`
+2. ChatGPT exact-SHA code review: PASS
+3. Initial Human physical-device QA: PASS reported
+4. Initial receipt `69563123adfe7f39e2a3e56e2716789578b81871`
+5. Subsequent physical-device evidence reproduced bottom-boundary clipping
+6. Previous approval: REVOKED / superseded
+7. Review Fix specification `b166a73bf0d56bab082aefc0edaf4e483cfc13fd`
+8. Review Fix implementation `0351d6b2d31a465ae8f45ad2aaa5486964300ddf`
+9. ChatGPT exact-SHA review: FIX REQUIRED because ancestor coordinate-space traversal was incorrect
+10. Code Fix `a03c0c36d5c95b113c316a4c4c26948582859f14`
+11. ChatGPT exact-SHA review: PASS
+12. New Human physical-device QA: PASS
+13. Final decision: FINAL APPROVED
+
+Final Implementation:
+`a03c0c36d5c95b113c316a4c4c26948582859f14`
+
+Commit:
+`fix: correct visible viewport coordinate traversal`
+
+Decision: FINAL APPROVED
+
+Validation:
+
+- Unit Tests: 90 PASS / FAIL 0
+- Debug Simulator clean build: PASS
+- Release Generic iOS Device unsigned build: PASS
+- `git diff --check`: PASS
+
+Codex Visual QA:
+
+- Small viewport: PASS
+- Standard viewport: PASS
+- Bottom: PASS
+- Bottom goal: PASS
+- Top: PASS
+- Left/right: PASS
+- Four corners: PASS
+- Full `MazePlayView` + 112pt HUD boundary: PASS
+
+Human physical-device QA: PASS
+
+Human-confirmed scope:
+
+- Bottom edge and bottom goal
+- Top and left/right edges
+- Four corners
+- SpriteView / HUD boundary
+- Floor/wall readability
+- No excessive outside-world blank
+
+Approved camera design:
+
+- A screen-space `gameplaySafeRect` uses the actual visible `SpriteView` / `SKView` bounds.
+- Complete projected player bounds, meaningful nearby path context, and the complete explored nearby goal bounds are protected.
+- GoalFlag protection includes its maximum pulse scale.
+- Outside-world reveal remains controlled and tile-relative.
+- Initial placement, movement, warp, restart, and resize share one camera solver.
+- Ancestor traversal keeps each rectangle in the current parent coordinate space, then converts once back to `SKView` coordinates.
+- Clip intersection applies only to `clipsToBounds`, `layer.masksToBounds`, and `UIWindow`; non-clipping ancestors do not shrink the viewport.
+- The 112pt HUD is not deducted again as a gameplay safe inset.
+- `ExplorationHUD` is clipped to its 112pt allocation; `SpriteView` remains a flexible VStack child and `GeometryReader` remains measurement-only.
+
+Regression coverage:
+
+- Actual `MazeScene` + `SKView` projection assertions
+- Edges and four corners
+- Visible nearby goal and maximum goal pulse
+- Viewport resize, warp, and restart
+- Nested clipping and non-clipping ancestors
+- Full `MazePlayView` / HUD boundary
+- Nested/non-clipping expected rectangles are derived independently from known UIView geometry, not from the runtime helper under test.
+
+Approved tile behavior:
+
+- Floor: `MazeFloor`
+- Wall: `MazeWall`
+- Floor/wall status: PASS / APPROVED
+- `FloorVariantA/B`, `WallVariantA/B`, source variant selection, and chunk/hash source selection are not reintroduced.
+- Coordinate cropping remains enabled within the approved single floor/wall textures.
+
+Resolved blockers:
+
+- Map-edge / SpriteView boundary clipping
+- Gameplay Visibility Review Fix
+
+Notes:
+
+- Historical initial approval and subsequent revocation entries above remain part of the audit trail.
+- The next work unit is `v1.0 Release External Alignment / Submission Readiness`; it is not started by this receipt.
