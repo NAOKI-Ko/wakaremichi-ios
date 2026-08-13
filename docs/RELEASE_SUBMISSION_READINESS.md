@@ -4,7 +4,7 @@ Audit date: 2026-08-13 (Asia/Tokyo)
 
 State Snapshot base: `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
 
-Review target: this work unit's new implementation commit (exact-SHA review pending)
+Review target: this work unit's new review-fix commit (exact-SHA review pending)
 
 Latest reviewed implementation/config: `a03c0c36d5c95b113c316a4c4c26948582859f14`
 
@@ -29,7 +29,7 @@ Release-blocking local findings:
 
 1. This Mac currently reports zero valid code-signing identities, and no Wakaremichi signed archive exists.
 2. Required App Store metadata, a public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
-3. The new app Privacy Manifest, UMP privacy-options re-entry, and v1 purchase-UI disposition have passed local validation but still require exact-SHA review before approval.
+3. The app Privacy Manifest and UMP privacy-options implementation remain locally validated. StoreKit decision B now also removes the unreachable Collection history limit while purchase UI is disabled; the review fix still requires exact-SHA review before approval.
 
 ## Readiness matrix
 
@@ -92,13 +92,14 @@ Release-blocking local findings:
 |---|---|---|---|---|---|---|---|
 | Product identifier | Git + App Store Connect | Final non-consumable ID if published | `com.karemichi.removeads`; source comments call it provisional | PASS | `StoreManager.swift` | Do not rename automatically; verify/create exact product if option A is chosen | Product / Engineering |
 | Purchase UI exposure | Git/source | Consistent with v1 product decision B | Hidden in v1.0 even after more than seven runs | PASS | `StoreManager.shouldShowRemoveAdsPurchaseCTA`; Collection render test | Preserve until a separately reviewed future release | Product |
+| Collection history | Git/source | No unreachable paywall while purchase UI is disabled | Unlimited for purchased and unpurchased users in v1.0 | PASS | `collectionRunLimit`; `collectionRunsForDisplay`; >7-run tests and visual render | Keep release gate and review any future re-enable | Engineering / Product |
 | Product-unavailable behavior | Git/source | No crash; no unusable purchase attempt | Product load error leaves product nil and disables purchase button | PASS | `StoreManager.refresh`; disabled button | Add reviewer-facing clarity if purchase remains exposed | Engineering / Product |
 | Purchase / entitlement | Git/source | Verified transaction; durable entitlement | StoreKit 2 verification, current entitlements, updates listener | PASS | `StoreManager.swift` | Sandbox-test after product setup | Engineering / QA |
 | Restore purchases UI | Git/source | Not exposed while purchase UI is hidden in v1.0 | `restore()` infrastructure retained; no public purchase or restore entry point | PASS | Repository search and StoreManager tests | Add purchase and restore UI together if remove-ads ships later | Engineering |
-| Entitlement effects | Git/source | Purchased state removes ad gates and unlocks all records | Bypasses result/replay/continue/restart ads; removes collection limit | PASS | `GameView`, `ResultView`, `CollectionView` | Sandbox-test all branches | QA |
+| Entitlement effects | Git/source | Purchased state removes ad gates; future enabled paywall unlocks records | Ad bypass remains intact; v1 Collection is unlimited for everyone; future enabled gate still distinguishes entitlement | PASS | `GameView`, `ResultView`, `StoreManager`, tests | Sandbox-test all branches before a future StoreKit launch | QA |
 | App Store Connect product | App Store Connect | Configured non-consumable if published | Dashboard not inspected | UNVERIFIED | No external evidence | Verify product, price, localization, review screenshot/status | Account Holder / Product |
 | v1 remove-ads disposition | Human product decision | B: hide for v1 | Decision B implemented; product ID/infrastructure retained | PASS | Product decision and v1 visibility gate | Do not expose without a separately reviewed work unit | Product Owner |
-| Submission with current StoreKit state | App + App Store Connect | No reachable purchase flow in v1 | Purchase CTA hidden; existing entitlement effects preserved | PASS | Collection visual QA and entitlement non-regression tests | App Store Connect product is not a v1 blocker while UI remains hidden | Product / Engineering |
+| Submission with current StoreKit state | App + App Store Connect | No reachable purchase flow or inaccessible history in v1 | Purchase CTA hidden; all Collection history visible; existing ad entitlement effects preserved | PASS | Collection visual QA and release-gate/entitlement tests | App Store Connect product is not a v1 blocker while UI remains hidden | Product / Engineering |
 
 ### Privacy
 
@@ -184,6 +185,7 @@ Archive prerequisites, in order:
 ### StoreKit
 
 - [x] Human decision B recorded and implemented: remove-ads purchase UI is hidden for v1.0.
+- [x] Collection history is unlimited for all v1.0 users while the purchase feature is disabled.
 - [x] Provisional product ID, StoreManager purchase/restore infrastructure, and existing entitlement behavior remain intact.
 - [ ] If published in a future version: complete product configuration and expose reviewed purchase and restore entry points together.
 

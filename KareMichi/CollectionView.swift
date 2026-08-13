@@ -19,16 +19,15 @@ struct CollectionView: View {
         Keepsake.acquired(from: allRuns)
     }
 
-    /// 買い切り前は直近7件だけ見せる。「全部の旅の記録」を買い切りで解除する。
+    /// v1は購入機能を非公開にしているため全件表示する。
+    /// 将来再公開するときはStoreManager側の同じrelease gateで7件制限を戻せる。
     private var visibleRuns: [DailyRun] {
-        if let limit = StoreManager.collectionRunLimit(isPurchased: store.isPurchased) {
-            return Array(allRuns.prefix(limit))
-        }
-        return allRuns
+        StoreManager.collectionRunsForDisplay(allRuns,
+                                              isPurchased: store.isPurchased)
     }
 
     private var hasLockedRuns: Bool {
-        !store.isPurchased && allRuns.count > 7
+        visibleRuns.count < allRuns.count
     }
 
     var body: some View {

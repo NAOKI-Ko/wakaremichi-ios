@@ -20,8 +20,11 @@ final class StoreManager {
     /// v1.0では購入導線を公開しない。将来のrelease用StoreKit基盤と既存entitlementは保持する。
     nonisolated static let isRemoveAdsPurchaseVisibleInV1 = false
 
-    nonisolated static func shouldShowRemoveAdsPurchaseCTA(hasLockedRuns: Bool) -> Bool {
-        isRemoveAdsPurchaseVisibleInV1 && hasLockedRuns
+    nonisolated static func shouldShowRemoveAdsPurchaseCTA(
+        hasLockedRuns: Bool,
+        purchaseFeatureEnabled: Bool = isRemoveAdsPurchaseVisibleInV1
+    ) -> Bool {
+        purchaseFeatureEnabled && hasLockedRuns
     }
 
     /// 購入状態による分岐をStoreKit Sandboxなしでも検証できる純粋関数。
@@ -33,9 +36,27 @@ final class StoreManager {
             : max(0, Tuning.maxReplaysPerDay - replayCount - restartCount)
     }
 
-    /// nilは件数制限なしを表す。
-    nonisolated static func collectionRunLimit(isPurchased: Bool) -> Int? {
-        isPurchased ? nil : 7
+    /// nilは件数制限なしを表す。購入導線を非公開にするreleaseでは、
+    /// 非購入者にも解除不能なpaywallを残さず、全履歴を見せる。
+    nonisolated static func collectionRunLimit(
+        isPurchased: Bool,
+        purchaseFeatureEnabled: Bool = isRemoveAdsPurchaseVisibleInV1
+    ) -> Int? {
+        guard purchaseFeatureEnabled, !isPurchased else { return nil }
+        return 7
+    }
+
+    /// Collection側がrelease gateを重複実装しないための共通絞り込み。
+    nonisolated static func collectionRunsForDisplay<Run>(
+        _ runs: [Run],
+        isPurchased: Bool,
+        purchaseFeatureEnabled: Bool = isRemoveAdsPurchaseVisibleInV1
+    ) -> [Run] {
+        guard let limit = collectionRunLimit(isPurchased: isPurchased,
+                                             purchaseFeatureEnabled: purchaseFeatureEnabled) else {
+            return runs
+        }
+        return Array(runs.prefix(limit))
     }
 
     private(set) var product: Product?

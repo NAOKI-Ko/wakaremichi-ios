@@ -103,6 +103,35 @@ final class MazeGameTests: XCTestCase {
         XCTAssertEqual(StoreManager.removeAdsProductID, "com.karemichi.removeads")
     }
 
+    func testCollectionLimitIsDisabledForNonPurchaserWhenPurchaseFeatureIsDisabled() {
+        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: false,
+                                                      purchaseFeatureEnabled: false))
+    }
+
+    func testCollectionLimitIsDisabledForPurchaserWhenPurchaseFeatureIsDisabled() {
+        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: true,
+                                                      purchaseFeatureEnabled: false))
+    }
+
+    func testFutureCollectionLimitRemainsSevenForNonPurchaserWhenFeatureIsEnabled() {
+        XCTAssertEqual(StoreManager.collectionRunLimit(isPurchased: false,
+                                                       purchaseFeatureEnabled: true),
+                       7)
+    }
+
+    func testFutureCollectionLimitIsDisabledForPurchaserWhenFeatureIsEnabled() {
+        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: true,
+                                                      purchaseFeatureEnabled: true))
+    }
+
+    func testV1CollectionDisplaysAllRunsBeyondFormerSevenRunLimit() {
+        let runs = Array(0..<8)
+
+        XCTAssertEqual(StoreManager.collectionRunsForDisplay(runs,
+                                                             isPurchased: false),
+                       runs)
+    }
+
     @MainActor
     func testRequiredPrivacyOptionsControlRendersWithoutLayoutFailure() throws {
         let manager = PrivacyOptionsManager(requirementReader: { .required },
@@ -2039,8 +2068,11 @@ final class MazeGameTests: XCTestCase {
                                                        replayCount: 999,
                                                        restartCount: 999),
                        Int.max)
-        XCTAssertEqual(StoreManager.collectionRunLimit(isPurchased: false), 7)
-        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: true))
+        XCTAssertEqual(StoreManager.collectionRunLimit(isPurchased: false,
+                                                       purchaseFeatureEnabled: true),
+                       7)
+        XCTAssertNil(StoreManager.collectionRunLimit(isPurchased: true,
+                                                      purchaseFeatureEnabled: true))
         XCTAssertEqual(StoreManager.removeAdsProductID, "com.karemichi.removeads")
     }
 

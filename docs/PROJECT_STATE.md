@@ -14,21 +14,21 @@ Latest reviewed implementation/config commit:
 State Snapshot base:
 `b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
 
-Review target: this work unit's new implementation commit
+Review target: this work unit's new review-fix commit
 
 Latest reviewed implementation/config status: APPROVED
 
 - ChatGPT exact SHA code review: PASS
 - Gameplay Visibility Fix code review: PASS
 - Gameplay Visibility Fix new Human physical-device QA: PASS
-- Unit Tests: 99 PASS / FAIL 0
+- Unit Tests: 104 PASS / FAIL 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
 Current work unit: v1.0 Privacy Manifest + UMP Privacy Options + Hide Remove-Ads
 
-Current work unit status: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
+Current work unit status: REVIEW FIX IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 
 Continuity: Ready
 
@@ -59,12 +59,14 @@ IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
 - Collection is the stable privacy/settings surface. Its privacy-options entry point is visible only while UMP reports `.required`; `.notRequired` and `.unknown` remain hidden.
 - The privacy-options form uses UMP's current `presentPrivacyOptionsForm` path. Presentation errors are handled without a crash, and the existing launch consent / `canRequestAds` / Rewarded gating semantics are unchanged.
 - Human StoreKit decision B is implemented: the v1.0 remove-ads purchase CTA is hidden.
+- While that purchase feature is disabled, Collection history is unlimited for every user; an unpurchased user cannot be left behind an unreachable seven-run paywall.
+- The future StoreKit release gate retains the former behavior: feature enabled + unpurchased limits to seven, while feature enabled + purchased remains unlimited.
 - `com.karemichi.removeads`, `StoreManager`, purchase/restore infrastructure, and purchased-entitlement effects remain intact for a future release and existing entitled users.
 - SwiftData schema is unchanged.
 
 Validation:
 
-- Unit Tests: 99 PASS / FAIL 0 / SKIP 0
+- Unit Tests: 104 PASS / FAIL 0 / SKIP 0
 - Debug Simulator clean build: PASS
 - Release Generic iOS Device unsigned clean build: PASS
 - Built-product privacy manifest validation: PASS
@@ -201,12 +203,6 @@ Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 # Next Work Unit
 
 Exact-SHA review of this privacy implementation, then External Dashboard Alignment + Signed Archive / Validation.
-
-v1.0 Privacy Manifest + UMP Privacy Options + StoreKit Release Decision
-
-Status: NOT STARTED
-
-After that work unit is reviewed, continue with External Dashboard Alignment + Signed Archive/Validation.
 
 # Do Not Start
 
