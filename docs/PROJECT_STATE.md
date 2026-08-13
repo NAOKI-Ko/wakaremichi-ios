@@ -6,6 +6,15 @@ Wakaremichi / まいにちの分かれ道
 
 v1.0 Release Candidate
 
+## App Store Screenshot Production
+
+- Direction: B — 世界観 × 習慣化訴求（C — 結果・自己投影訴求を補助）
+- Raw screenshots: 8
+- Final screenshots: 6
+- Output: 1290 × 2796 px portrait PNG, opaque
+- Plan: `docs/STORE_SCREENSHOT_PLAN.md`
+- Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
+
 # Git Review State
 
 Latest reviewed implementation/config commit:
