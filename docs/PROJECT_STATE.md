@@ -24,7 +24,7 @@ v1.0 Release Candidate
 - Final screenshots: 6
 - Output: 1290 × 2796 px portrait PNG, opaque
 - State Snapshot base: `e6dc821452fc965d647f7223e9229a103d6d51e4`
-- Review Target: Slide 04 visual-fix commit (exact SHA recorded after asset commit)
+- Review Target: `08df20bc573521975d1e2c5be5380bc3320de7e6`
 - Plan: `docs/STORE_SCREENSHOT_PLAN.md`
 - Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
 - Contact sheet: `docs/store-assets/contact-sheet-v2.png`
@@ -38,7 +38,7 @@ Latest reviewed implementation/config commit:
 State Snapshot base:
 `e6dc821452fc965d647f7223e9229a103d6d51e4`
 
-Review target: Slide 04 visual-fix commit (pending exact SHA)
+Review target: `08df20bc573521975d1e2c5be5380bc3320de7e6` (Slide 04 visual review fix)
 
 Latest reviewed implementation/config status: APPROVED
 
