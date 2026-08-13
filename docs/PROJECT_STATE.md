@@ -23,7 +23,7 @@ v1.0 Release Candidate
 - Final screenshots: 6
 - Output: 1290 × 2796 px portrait PNG, opaque
 - State Snapshot base: `e6dc821452fc965d647f7223e9229a103d6d51e4`
-- Review Target: screenshot v2 implementation commit (exact SHA recorded after asset commit)
+- Review Target: `1883953905de640afb06cde22b8ae7eb1f76653f`
 - Plan: `docs/STORE_SCREENSHOT_PLAN.md`
 - Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
 - Contact sheet: `docs/store-assets/contact-sheet-v2.png`
@@ -37,7 +37,7 @@ Latest reviewed implementation/config commit:
 State Snapshot base:
 `e6dc821452fc965d647f7223e9229a103d6d51e4`
 
-Review target: App Store Screenshot v2 implementation commit (pending exact SHA)
+Review target: `1883953905de640afb06cde22b8ae7eb1f76653f` (App Store Screenshot v2)
 
 Latest reviewed implementation/config status: APPROVED
 
