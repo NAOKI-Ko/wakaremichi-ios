@@ -12,7 +12,7 @@ Latest reviewed implementation/config commit:
 `a03c0c36d5c95b113c316a4c4c26948582859f14`
 
 State Snapshot:
-`b166a73bf0d56bab082aefc0edaf4e483cfc13fd`
+`ecab58b8e110b9a3790f8331b3ccc399c2cbd521`
 
 Review target: none / implementation completed
 
@@ -26,9 +26,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: Gameplay Visibility Fix — Final Review Receipt / State Sync
+Current work unit: v1.0 Release External Alignment / Submission Readiness
 
-Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
+Current work unit status: AUDIT COMPLETE / EXTERNAL VERIFICATION PENDING
 
 Continuity: Ready
 
@@ -164,26 +164,30 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
-- Apple Developer App ID / Bundle ID alignment verification
-- App Store Connect app record / Bundle ID alignment verification
-- AdMob app Bundle ID alignment verification
-- Signed Archive
-- App Store validation / upload
-- App Store Connect metadata / privacy / screenshots
-- Territory/privacy configuration as applicable
-- StoreKit remove-ads exposure/configuration decision
+- App-owned Privacy manifest is missing even though app code uses `@AppStorage` / `UserDefaults`.
+- UMP privacy-options re-entry is not implemented for states where UMP requires it.
+- StoreKit remove-ads is exposed in UI while its product ID is provisional, its App Store Connect product is unverified, and no restore-purchases UI is connected.
+- Human decision is required: publish remove-ads in v1.0 with complete configuration, or hide it in a separately reviewed implementation work unit.
+- Apple Developer App ID, capabilities, Team, distribution certificate, and provisioning alignment are unverified.
+- App Store Connect app record / Bundle ID alignment is unverified.
+- AdMob app Bundle ID, app linkage, Rewarded unit, and Privacy & messaging configuration are unverified.
+- This Mac currently has no valid code-signing identity; a Wakaremichi signed Archive does not exist.
+- App Store validation / upload has not been performed.
+- App Store Connect metadata, privacy answers, public privacy/support URLs, submission screenshots, age rating, release method, and territories are incomplete or unverified.
+
+Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 
 # Next Work Unit
 
-v1.0 Release External Alignment / Submission Readiness
+v1.0 Privacy Manifest + UMP Privacy Options + StoreKit Release Decision
 
 Status: NOT STARTED
 
-This work unit is intentionally not started by the Gameplay Visibility Final Review Receipt sync.
+After that work unit is reviewed, continue with External Dashboard Alignment + Signed Archive/Validation.
 
 # Do Not Start
 
-- New game features outside the active Gameplay Visibility Fix review fix
+- New game features during v1.0 release-readiness work
 - Banner ads
 - Interstitial ads
 - App Open ads
