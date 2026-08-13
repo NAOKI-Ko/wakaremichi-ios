@@ -313,6 +313,56 @@ final class MazeGameTests: XCTestCase {
         XCTAssertEqual(Keepsake.v1Catalog.filter { !acquired.contains($0) }.count, 7)
     }
 
+    func testKeepsakeAssetNamesMatchStableIDsAndCatalogOrderIsUnchanged() {
+        let expected = [
+            ("small-blue-stone", "小さな青い石", "KeepsakeBlueStone"),
+            ("weathered-key", "古びた鍵", "KeepsakeOldKey"),
+            ("white-feather", "白い羽根", "KeepsakeWhiteFeather"),
+            ("chipped-compass", "欠けた方位磁針", "KeepsakeBrokenCompass"),
+            ("someones-button", "誰かのボタン", "KeepsakeButton"),
+            ("dried-flower", "乾いた花", "KeepsakeDriedFlower"),
+            ("rusted-coin", "錆びたコイン", "KeepsakeRustyCoin"),
+            ("glass-shard", "ガラス片", "KeepsakeGlassShard"),
+        ]
+
+        XCTAssertEqual(Keepsake.v1Catalog.map(\.id), expected.map { $0.0 })
+        XCTAssertEqual(Keepsake.v1Catalog.map(\.name), expected.map { $0.1 })
+        XCTAssertEqual(Keepsake.v1Catalog.map(\.assetName), expected.map { $0.2 })
+    }
+
+    func testAllKeepsakeArtworkAssetsAreBundled() {
+        for keepsake in Keepsake.v1Catalog {
+            XCTAssertFalse(keepsake.assetName.isEmpty, keepsake.id)
+            XCTAssertNotNil(UIImage(named: keepsake.assetName), keepsake.assetName)
+        }
+    }
+
+    func testKeepsakeDeterministicSelectionRemainsStableForKnownSeeds() {
+        let expectedIDs = (1...16).compactMap {
+            Keepsake.earned(seed: 20_260_800 + UInt64($0), reachedGoal: true)?.id
+        }
+
+        XCTAssertEqual(expectedIDs, [
+            "glass-shard", "white-feather", "rusted-coin", "rusted-coin",
+            "chipped-compass", "small-blue-stone", "rusted-coin", "dried-flower",
+            "chipped-compass", "someones-button", "glass-shard", "dried-flower",
+            "white-feather", "rusted-coin", "rusted-coin", "weathered-key",
+        ])
+    }
+
+    @MainActor
+    func testKeepsakeShelfRendersAtZeroFiveAndEightAcquiredStates() throws {
+        try renderKeepsakeCollection(acquiredCount: 0,
+                                     path: "/tmp/KareMichi-keepsakes-0-of-8.png")
+        try renderKeepsakeCollection(acquiredCount: 5,
+                                     path: "/tmp/KareMichi-keepsakes-5-of-8.png")
+        try renderKeepsakeCollection(acquiredCount: 8,
+                                     path: "/tmp/KareMichi-keepsakes-8-of-8.png")
+        try renderKeepsakeCollection(acquiredCount: 5,
+                                     size: CGSize(width: 320, height: 568),
+                                     path: "/tmp/KareMichi-keepsakes-small-5-of-8.png")
+    }
+
     func testPlayStreakCountsFirstCompletionAndIgnoresSameDayDuplicates() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))
@@ -2358,6 +2408,50 @@ final class MazeGameTests: XCTestCase {
         case .caution: axes.caution = value
         case .flexibility: axes.flexibility = value
         }
+    }
+
+    @MainActor
+    private func renderKeepsakeCollection(acquiredCount: Int,
+                                          size: CGSize = CGSize(width: 390, height: 844),
+                                          path: String) throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: DailyRun.self, configurations: configuration)
+        let context = container.mainContext
+        var selectedSeeds: [UInt64] = []
+        var selectedKeepsakes: Set<Keepsake> = []
+        var candidateSeed: UInt64 = 20_260_801
+
+        while selectedKeepsakes.count < acquiredCount {
+            if let keepsake = Keepsake.earned(seed: candidateSeed, reachedGoal: true),
+               selectedKeepsakes.insert(keepsake).inserted {
+                selectedSeeds.append(candidateSeed)
+            }
+            candidateSeed += 1
+        }
+
+        for (offset, seed) in selectedSeeds.enumerated() {
+            var log = RunLog()
+            log.path = [Coord(x: 1, y: 1)]
+            log.reachedGoal = true
+            log.openCellCount = 1
+            context.insert(DailyRun(date: Date(timeIntervalSince1970:
+                                                1_775_000_000 - Double(offset * 86_400)),
+                                    seed: Int(seed),
+                                    log: log,
+                                    axes: .neutral,
+                                    traveler: .wanderer,
+                                    moodBefore: nil,
+                                    fogFeedback: nil))
+        }
+        try context.save()
+
+        let collection = CollectionView()
+            .modelContainer(container)
+            .frame(width: size.width, height: size.height)
+        try renderVisual(collection,
+                         size: size,
+                         name: "Keepsakes \(acquiredCount) / 8",
+                         path: path)
     }
 
     @MainActor

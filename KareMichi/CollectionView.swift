@@ -146,25 +146,39 @@ struct CollectionView: View {
             LazyVGrid(columns: keepsakeColumns, spacing: 8) {
                 ForEach(Keepsake.v1Catalog) { keepsake in
                     let isAcquired = acquiredKeepsakes.contains(keepsake)
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(isAcquired
-                                  ? Palette.lampSUI.opacity(0.7)
-                                  : Color.white.opacity(0.08))
-                            .frame(width: 7, height: 7)
+                    HStack(spacing: 10) {
+                        Image(keepsake.assetName)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .saturation(isAcquired ? 1 : 0)
+                            .brightness(isAcquired ? 0 : -0.28)
+                            .opacity(isAcquired ? 0.95 : 0.22)
+                            .frame(width: 52, height: 52)
+                            .shadow(color: isAcquired
+                                    ? Palette.lampSUI.opacity(0.16)
+                                    : .clear,
+                                    radius: 7)
 
                         Text(isAcquired ? keepsake.name : "まだ見つけていないもの")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.white.opacity(isAcquired ? 0.68 : 0.24))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .font(.system(size: 11, weight: isAcquired ? .medium : .regular))
+                            .foregroundStyle(.white.opacity(isAcquired ? 0.74 : 0.3))
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.75)
+                            .multilineTextAlignment(.leading)
 
                         Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 10)
-                    .frame(height: 34)
-                    .background(Palette.surfaceSUI.opacity(isAcquired ? 0.55 : 0.28),
-                                in: RoundedRectangle(cornerRadius: 9))
+                    .padding(.horizontal, 9)
+                    .frame(maxWidth: .infinity, minHeight: 84, maxHeight: 84)
+                    .background {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Palette.surfaceSUI.opacity(isAcquired ? 0.58 : 0.3))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Palette.lampSUI.opacity(isAcquired ? 0.09 : 0.03),
+                                            lineWidth: 0.7)
+                            }
+                    }
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(isAcquired
                                         ? "入手済み、\(keepsake.name)"

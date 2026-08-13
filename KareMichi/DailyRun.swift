@@ -18,6 +18,21 @@ struct Keepsake: Identifiable, Hashable {
     let id: String
     let name: String
 
+    /// Asset Catalog名は過去結果を復元するstable IDだけから決める。
+    var assetName: String {
+        switch id {
+        case "small-blue-stone": "KeepsakeBlueStone"
+        case "weathered-key": "KeepsakeOldKey"
+        case "white-feather": "KeepsakeWhiteFeather"
+        case "chipped-compass": "KeepsakeBrokenCompass"
+        case "someones-button": "KeepsakeButton"
+        case "dried-flower": "KeepsakeDriedFlower"
+        case "rusted-coin": "KeepsakeRustyCoin"
+        case "glass-shard": "KeepsakeGlassShard"
+        default: ""
+        }
+    }
+
     static let v1Catalog: [Keepsake] = [
         Keepsake(id: "small-blue-stone", name: "小さな青い石"),
         Keepsake(id: "weathered-key", name: "古びた鍵"),
