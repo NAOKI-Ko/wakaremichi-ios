@@ -8,31 +8,36 @@ v1.0 Release Candidate
 
 ## Keepsake Artwork Integration
 
-- Keepsake artwork: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
-- Collection visual shelf: IMPLEMENTED / VALIDATION PASS / REVIEW PENDING
-- Store screenshot readiness: Keepsake artwork ready; final store screenshot recapture pending
+- Keepsake artwork: APPROVED
+- Collection visual shelf: APPROVED
+- Store screenshot readiness: Screenshot v2 implemented; Human Visual Review pending
 - SwiftData schema: unchanged
-- Review Target: `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
-- Latest Reviewed implementation/config commit remains `c7e906a7de34a31432daef9e03abc7d2a66c0b8a` until exact-SHA review.
+- Implementation: `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
+- Review status: APPROVED
 
-## App Store Screenshot Production
+## App Store Screenshot Production v2
 
 - Direction: B — 世界観 × 習慣化訴求（C — 結果・自己投影訴求を補助）
-- Raw screenshots: 8
+- App Store Screenshot v2: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
+- New v2 raw screenshots: 6
 - Final screenshots: 6
 - Output: 1290 × 2796 px portrait PNG, opaque
+- State Snapshot base: `e6dc821452fc965d647f7223e9229a103d6d51e4`
+- Review Target: screenshot v2 implementation commit (exact SHA recorded after asset commit)
 - Plan: `docs/STORE_SCREENSHOT_PLAN.md`
 - Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
+- Contact sheet: `docs/store-assets/contact-sheet-v2.png`
+- Final submission-ready: not declared; Human Visual Gate remains.
 
 # Git Review State
 
 Latest reviewed implementation/config commit:
-`c7e906a7de34a31432daef9e03abc7d2a66c0b8a`
+`5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
 
 State Snapshot base:
-`b0358572e0c7aecf01aef0a0210e4dd9b786cc68`
+`e6dc821452fc965d647f7223e9229a103d6d51e4`
 
-Review target: none / implementation completed
+Review target: App Store Screenshot v2 implementation commit (pending exact SHA)
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -44,9 +49,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: Privacy Manifest + UMP Privacy Options + StoreKit v1 Hide — Final Review Receipt / State Sync
+Current work unit: App Store Screenshot Recapture + Marketing Screenshot v2
 
-Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
+Current work unit status: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
 
 Continuity: Ready
 
