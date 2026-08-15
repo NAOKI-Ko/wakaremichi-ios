@@ -58,6 +58,22 @@
 - The panel ends shortly after the final 8/3 and 8/2 entries, removing the former excessive blank tail.
 - A new contact sheet was built by reading the unchanged five passed files and the new slide 04.
 
+### Final Human Visual Gate
+
+- 01: PASS
+- 02: PASS
+- 03: PASS
+- 04: PASS
+- 05: PASS
+- 06: PASS
+- Human final decision: APP STORE SCREENSHOT V2 — FINAL APPROVED / SUBMISSION READY
+
+Slide 04 final resolution:
+
+- Previous issue: a fragment of the preceding section remained at the top, excessive blank space remained below the grid, and the composition looked like an accidental mid-scroll crop.
+- Final fix: the panel starts at the logical「旅の記録」header, shows the 8 / 8 / 0 summary and eight dated journey trail cards, and ends without the preceding-section fragment or excessive bottom blank.
+- Final Human Visual Gate: PASS
+
 ## Mechanical Validation
 
 - Six canonical files exist: PASS
@@ -82,5 +98,5 @@
 
 ## Gate Status
 
-- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 REVIEW FIX IMPLEMENTED — RE-REVIEW PENDING / 05 PASS / 06 PASS
-- These files are not yet declared final submission-ready.
+- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 PASS / 05 PASS / 06 PASS
+- Canonical final screenshot set: FINAL APPROVED / SUBMISSION READY

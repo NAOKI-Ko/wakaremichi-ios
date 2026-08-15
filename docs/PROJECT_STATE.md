@@ -10,7 +10,7 @@ v1.0 Release Candidate
 
 - Keepsake artwork: APPROVED
 - Collection visual shelf: APPROVED
-- Store screenshot readiness: Screenshot v2 implemented; Human Visual Review pending
+- Store screenshot readiness: SUBMISSION READY
 - SwiftData schema: unchanged
 - Implementation: `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
 - Review status: APPROVED
@@ -18,27 +18,29 @@ v1.0 Release Candidate
 ## App Store Screenshot Production v2
 
 - Direction: B — 世界観 × 習慣化訴求（C — 結果・自己投影訴求を補助）
-- App Store Screenshot v2: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
-- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 REVIEW FIX IMPLEMENTED — RE-REVIEW PENDING / 05 PASS / 06 PASS
+- App Store Screenshot v2: FINAL APPROVED
+- Human Visual Gate v2: 01 PASS / 02 PASS / 03 PASS / 04 PASS / 05 PASS / 06 PASS
 - New v2 raw screenshots: 6
 - Final screenshots: 6
 - Output: 1290 × 2796 px portrait PNG, opaque
-- State Snapshot base: `e6dc821452fc965d647f7223e9229a103d6d51e4`
-- Review Target: `08df20bc573521975d1e2c5be5380bc3320de7e6`
+- State Snapshot: `d0331ea28585501fce3cdb39dfec24c954f56568`
+- Screenshot v2 implementation: `1883953905de640afb06cde22b8ae7eb1f76653f`
+- Slide 04 visual fix: `08df20bc573521975d1e2c5be5380bc3320de7e6`
+- Review Target: none
 - Plan: `docs/STORE_SCREENSHOT_PLAN.md`
 - Assets: `docs/store-assets/raw/`, `docs/store-assets/final/`
 - Contact sheet: `docs/store-assets/contact-sheet-v2.png`
-- Final submission-ready: not declared; Human Visual Gate remains.
+- Final submission status: SUBMISSION READY
 
 # Git Review State
 
 Latest reviewed implementation/config commit:
 `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
 
-State Snapshot base:
-`e6dc821452fc965d647f7223e9229a103d6d51e4`
+State Snapshot:
+`d0331ea28585501fce3cdb39dfec24c954f56568`
 
-Review target: `08df20bc573521975d1e2c5be5380bc3320de7e6` (Slide 04 visual review fix)
+Review target: none
 
 Latest reviewed implementation/config status: APPROVED
 
@@ -50,9 +52,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: App Store Screenshot v2 — Visual Review Fix, Slide 04 only
+Current work unit: App Store Screenshot v2 — Final Receipt / Submission Readiness Sync
 
-Current work unit status: REVIEW FIX IMPLEMENTED / RE-REVIEW PENDING
+Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
 
 Continuity: Ready
 
@@ -229,7 +231,11 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 - UMP-required geography / test-geography physical-device privacy-options form presentation is not yet verified.
 - This Mac currently has no valid code-signing identity; a Wakaremichi signed Archive does not exist.
 - App Store validation / upload has not been performed.
-- App Store Connect metadata, privacy answers, public privacy/support URLs, submission screenshots, age rating, release method, and territories are incomplete or unverified.
+- App Store Connect metadata, privacy answers, public privacy/support URLs, age rating, release method, and territories are incomplete or unverified.
+
+Resolved in the current release state:
+
+- App Store Screenshot v2: FINAL APPROVED / 6 of 6 Human Visual Gate PASS / SUBMISSION READY
 
 Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 

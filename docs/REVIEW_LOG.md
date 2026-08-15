@@ -405,3 +405,54 @@ Next Work Unit:
 
 After that:
 `Signed Archive / Validation / Upload`
+
+## 2026-08-15 — App Store Screenshot v2 Final Review Receipt
+
+Work Unit:
+`App Store Screenshot v2 — Final Receipt / Submission Readiness Sync`
+
+Screenshot v2 implementation:
+`1883953905de640afb06cde22b8ae7eb1f76653f`
+
+Slide 04 visual fix:
+`08df20bc573521975d1e2c5be5380bc3320de7e6`
+
+Human Visual Gate:
+
+- 01 PASS
+- 02 PASS
+- 03 PASS
+- 04 PASS
+- 05 PASS
+- 06 PASS
+
+Slide 04 final status: PASS
+
+- The preceding-section fragment was removed.
+- The panel begins at the logical「旅の記録」header.
+- The 8 / 8 / 0 summary and eight dated journey trail cards are visible.
+- The excessive bottom blank and accidental mid-scroll crop appearance were removed.
+
+Canonical final set:
+
+- `docs/store-assets/final/01-daily-fog-maze.png`
+- `docs/store-assets/final/02-path-becomes-result.png`
+- `docs/store-assets/final/03-reflection-in-choices.png`
+- `docs/store-assets/final/04-daily-journey-record.png`
+- `docs/store-assets/final/05-small-discoveries.png`
+- `docs/store-assets/final/06-gentle-sharing.png`
+
+Mechanical status:
+
+- Six files: 1290 × 2796 px portrait PNG
+- Opaque / no alpha channel
+- Screenshot and production source/config files unchanged by this receipt
+
+Decision:
+`APP STORE SCREENSHOT V2 — FINAL APPROVED / SUBMISSION READY`
+
+Resolved blocker:
+`App Store screenshot production and Human Visual Gate`
+
+Next Work Unit:
+`v1.0 External Dashboard Alignment + Signing Readiness`
