@@ -28,7 +28,7 @@ The reviewed game implementation and unsigned Release build baseline remain inta
 Release-blocking local findings:
 
 1. This Mac currently reports zero valid code-signing identities, and no Wakaremichi signed archive exists.
-2. Required App Store metadata, a public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
+2. Required App Store metadata, App Store Connect registration of the verified public privacy-policy URL, a curated submission screenshot set, territory selection, and all external identity/linkage checks remain absent or unverified.
 3. UMP privacy-options form presentation still needs physical-device confirmation under a required geography or test geography; local implementation approval does not substitute for that runtime QA.
 
 ## Readiness matrix
@@ -111,7 +111,7 @@ Release-blocking local findings:
 | UMP launch consent gate | Git/source | Update each launch, show required form, gate requests | Implemented; failures do not crash and ads require `canRequestAds` | PASS | `KareMichiApp`; `GoogleMobileAdsProvider` | Complete regional QA and dashboard configuration | QA / Privacy |
 | SDK-declared data practices | SDK privacy manifests | Included in App Privacy assessment | Google SDK manifests enumerate advertising/device/product-interaction/location/diagnostic categories, with tracking declared for Device ID by GMA | UNVERIFIED | local SDK manifests | Privacy owner must map actual configuration and all third-party practices into ASC answers | Privacy |
 | App Store App Privacy answers | App Store Connect | Complete and accurate, including Google SDK | Dashboard not inspected | UNVERIFIED | No external evidence | Complete and publish responses | Privacy / Account Holder |
-| Privacy policy URL | Public web + App Store Connect | Publicly accessible URL | No URL in repository/docs; dashboard not inspected | BLOCKED | Repository search; Apple requires URL for iOS apps | Publish policy and enter URL in App Store Connect | Product / Legal |
+| Privacy policy URL | Public web + App Store Connect | Publicly accessible URL | `https://naoki-ko.github.io/wakaremichi-privacy/` is live over HTTPS; App Store Connect entry is not verified | PASS | Public page, HTTPS redirect, page content, and official links verified on 2026-08-15 | Enter the verified URL in App Store Connect | Product / Legal |
 | Local persistence | Git/source | Clearly distinguished from off-device collection | SwiftData and AppStorage only; no app-owned cloud/account service found | PASS | imports and repository search | Describe accurately in privacy review | Engineering / Privacy |
 | App-owned analytics/accounts | Git/source | No undeclared service | No analytics SDK and no account/login system found | PASS | repository/package search | Recheck archive dependency report | Engineering |
 | Sensitive permission APIs | Git/source/plist | No unnecessary permission request | No location, contacts, photos, camera, microphone, health, Bluetooth, calendar, or tracking prompt found | PASS | source and plist search | Confirm on final archive | Engineering / QA |
@@ -134,7 +134,7 @@ Archive prerequisites, in order:
 1. Verify Apple Developer App ID, team, capabilities, certificate, and managed provisioning.
 2. Verify App Store Connect app record and AdMob app linkage.
 3. Complete required/test-geography physical-device UMP privacy-options form QA.
-4. Complete privacy policy, App Privacy answers, metadata, screenshots, age rating, release method, and territories.
+4. Enter the verified Privacy Policy URL in App Store Connect, then complete App Privacy answers, remaining metadata, screenshots, age rating, release method, and territories.
 5. Restore a valid Apple Distribution signing identity on the archive Mac.
 6. Create a signed Release archive, generate/review its privacy report, validate, upload, and associate the build.
 
@@ -146,7 +146,7 @@ Archive prerequisites, in order:
 | Subtitle | Product docs/App Store Connect | Final subtitle if used | No draft found in Git | MISSING | Repository search | Decide and enter or intentionally omit if allowed | Product / Marketing |
 | Keywords | Product docs/App Store Connect | Final keywords | No draft found in Git | MISSING | Repository search | Prepare and enter keywords | Marketing |
 | Support URL | Public web/App Store Connect | Working public support URL | No URL found in Git | MISSING | Repository search | Publish support page and enter URL | Product |
-| Privacy policy URL | Public web/App Store Connect | Working public privacy policy URL | No URL found in Git | MISSING | Repository search | Publish policy and enter URL | Product / Legal |
+| Privacy policy URL | Public web/App Store Connect | Working public privacy policy URL | Published at `https://naoki-ko.github.io/wakaremichi-privacy/`; App Store Connect entry remains pending | PASS | GitHub Pages verified over HTTPS on 2026-08-15 | Enter the exact verified URL in App Store Connect | Product / Legal |
 | Promotional text | Product docs/App Store Connect | Optional, if used | No draft found | MISSING | Repository search | Decide whether to omit or supply | Marketing |
 | Marketing assets | Product asset source | Any planned launch assets | No release marketing set identified in Git | MISSING | Repository search | Prepare only if launch plan requires it | Marketing |
 | App Store screenshots | App Store Connect | Curated screenshots for every required display size | 27 ignored local QA screenshots exist, but no Git-managed submission set or ASC evidence | MISSING | ignored `Screenshots/` and `Screenshots-Restart/` | Select/capture compliant final screens and upload by required size | Design / Marketing |
@@ -170,7 +170,8 @@ Archive prerequisites, in order:
 - [ ] App record exists and uses `com.naoki.wakaremichi`.
 - [ ] SKU, primary language, exact app name, category, age rating, copyright, and release method are complete.
 - [ ] v1.0 record exists and the uploaded build is selected.
-- [ ] Support URL, privacy-policy URL, description, subtitle/omission decision, keywords, and screenshots are complete.
+- [x] Public privacy-policy page is live at `https://naoki-ko.github.io/wakaremichi-privacy/`.
+- [ ] Enter the verified privacy-policy URL in App Store Connect; complete Support URL, description, subtitle/omission decision, keywords, and screenshots.
 - [ ] App Privacy includes applicable Google Mobile Ads/UMP practices.
 - [ ] Territory availability is intentionally selected.
 

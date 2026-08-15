@@ -456,3 +456,37 @@ Resolved blocker:
 
 Next Work Unit:
 `v1.0 External Dashboard Alignment + Signing Readiness`
+
+## 2026-08-15 — Public Privacy Policy Publication Receipt
+
+Work Unit:
+`Wakaremichi v1.0 Privacy Policy GitHub Pages`
+
+Repository:
+<https://github.com/NAOKI-Ko/wakaremichi-privacy>
+
+Privacy repository implementation:
+`760886db5fe6db66e51498451b313b1e229d4b60`
+
+Published URL:
+<https://naoki-ko.github.io/wakaremichi-privacy/>
+
+Publication status: VERIFIED / PASS
+
+- Repository visibility: Public
+- Default branch: `main`
+- GitHub Pages source: `main` / `/ (root)`
+- HTTPS: enforced; HTTP redirects to HTTPS
+- Page title: `プライバシーポリシー | まいにちの分かれ道`
+- Visible heading and app name: PASS
+- UTF-8 rendering and 320px-width horizontal-overflow check: PASS
+- Required disclosure keywords: PASS
+- Google official links: PASS
+- Unresolved placeholders or secrets: none
+- `wakaremichi-ios` production Swift, Xcode project, assets, and configuration changes: 0
+
+Resolved blocker:
+`Public Privacy Policy URL publication`
+
+Remaining external action:
+Enter <https://naoki-ko.github.io/wakaremichi-privacy/> in App Store Connect as the Privacy Policy URL.

@@ -112,6 +112,19 @@ Final status:
 - Collection history: v1 unlimited / no paywall
 - ChatGPT exact-SHA review of `c7e906a7de34a31432daef9e03abc7d2a66c0b8a`: PASS
 
+# Public Privacy Policy
+
+VERIFIED / PASS
+
+- Repository: <https://github.com/NAOKI-Ko/wakaremichi-privacy>
+- Visibility: Public
+- GitHub Pages source: `main` / `/ (root)`
+- Published URL: <https://naoki-ko.github.io/wakaremichi-privacy/>
+- HTTPS: enforced; HTTP redirects to HTTPS
+- Published page title, Japanese text, required disclosure keywords, and Google official links: verified
+- Unresolved placeholders: none
+- App Store Connect registration of the verified URL: pending external dashboard work
+
 Validation:
 
 - Unit Tests: 104 PASS / FAIL 0 / SKIP 0
@@ -247,11 +260,12 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 - UMP-required geography / test-geography physical-device privacy-options form presentation is not yet verified.
 - This Mac currently has no valid code-signing identity; a Wakaremichi signed Archive does not exist.
 - App Store validation / upload has not been performed.
-- App Store Connect metadata, privacy answers, public privacy/support URLs, age rating, release method, and territories are incomplete or unverified.
+- App Store Connect metadata, privacy answers, Support URL, registration of the verified Privacy Policy URL, age rating, release method, and territories are incomplete or unverified.
 
 Resolved in the current release state:
 
 - App Store Screenshot v2: FINAL APPROVED / 6 of 6 Human Visual Gate PASS / SUBMISSION READY
+- Public Privacy Policy: VERIFIED / PASS at <https://naoki-ko.github.io/wakaremichi-privacy/>
 
 Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 
