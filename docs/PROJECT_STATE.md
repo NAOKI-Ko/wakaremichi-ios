@@ -10,7 +10,7 @@ v1.0 Release Candidate
 
 - Keepsake artwork: APPROVED
 - Collection visual shelf: APPROVED
-- Store screenshot readiness: SUBMISSION READY
+- Store screenshot readiness: approved 6.9-inch v2 set retained; new 6.5-inch actual-screen template candidate awaits Human Visual Review
 - SwiftData schema: unchanged
 - Implementation: `5cb43efd4011b3fd517d93c5c5157bd87a8106cb`
 - Review status: APPROVED
@@ -32,6 +32,20 @@ v1.0 Release Candidate
 - Contact sheet: `docs/store-assets/contact-sheet-v2.png`
 - Final submission status: SUBMISSION READY
 
+## App Store Screenshot 6.5-inch Template Candidate
+
+- Direction: actual app screen inside a restrained, unified iPhone-frame template
+- Output: 6 files at 1284 × 2778 px portrait PNG, opaque
+- Raw source: current validated real app UI captures; six source pairs are byte-identical
+- UI treatment: no internal retouching, redraw, collage, copy overlay, stretching, or fabricated content
+- Production source/config diff: 0
+- State Snapshot base: `720382246fefb9c03d9a8f32b51b20874ea79119`
+- Status: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
+- Production notes: `docs/STORE_SCREENSHOT_6_5_PRODUCTION_NOTES.md`
+- Assets: `docs/store-assets/raw-6_5/`, `docs/store-assets/final-6_5/`
+- Contact sheet: `docs/store-assets/contact-sheet-6_5.png`
+- Review target: current work unit commit, reported after push
+
 # Git Review State
 
 Latest reviewed implementation/config commit:
@@ -52,9 +66,9 @@ Latest reviewed implementation/config status: APPROVED
 - Release Generic iOS Device unsigned build: PASS
 - `git diff --check`: PASS
 
-Current work unit: App Store Screenshot v2 — Final Receipt / Submission Readiness Sync
+Current work unit: App Store Screenshot 6.5-inch — Actual-screen Template Redesign
 
-Current work unit status: FINAL APPROVED / DOCS RECEIPT PENDING EXACT-SHA REVIEW
+Current work unit status: IMPLEMENTED / HUMAN VISUAL REVIEW PENDING
 
 Continuity: Ready
 
@@ -225,6 +239,8 @@ Specification: `docs/GAMEPLAY_VISIBILITY_FIX_SPEC.md`
 
 # Release Blockers
 
+- The new 6.5-inch actual-screen template candidate requires Human Visual Review before it supersedes the previously approved screenshot direction for submission.
+
 - Apple Developer App ID, capabilities, Team, distribution certificate, and provisioning alignment are unverified.
 - App Store Connect app record / Bundle ID alignment is unverified.
 - AdMob app Bundle ID, app linkage, Rewarded unit, and Privacy & messaging configuration are unverified.
@@ -241,9 +257,9 @@ Detailed matrix: `docs/RELEASE_SUBMISSION_READINESS.md`
 
 # Next Work Unit
 
-v1.0 External Dashboard Alignment + Signing Readiness.
+App Store Screenshot 6.5-inch — Human Visual Gate.
 
-After that work unit, continue with Signed Archive / Validation / Upload.
+After that gate, continue with v1.0 External Dashboard Alignment + Signing Readiness, then Signed Archive / Validation / Upload.
 
 # Do Not Start
 
